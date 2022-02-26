@@ -4,5 +4,7 @@
   "initialVersions": {
     "lsctl": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "real-fishes-hunt"
+  ]
 }
