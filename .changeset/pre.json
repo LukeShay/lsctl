@@ -2,7 +2,7 @@
   "mode": "pre",
   "tag": "next",
   "initialVersions": {
-    "lsctl": "0.0.1"
+    "lsctl": "0.0.0"
   },
   "changesets": []
 }
