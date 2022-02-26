@@ -1,0 +1,64 @@
+{
+  "name": "lsctl",
+  "version": "0.0.1",
+  "description": "",
+  "keywords": [
+    "cli",
+    "node",
+    "build",
+    "swc"
+  ],
+  "homepage": "https://github.com/lukeshay/lsctl#readme",
+  "bugs": {
+    "url": "https://github.com/lukeshay/lsctl/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lukeshay/lsctl.git"
+  },
+  "license": "MIT",
+  "author": "Luke Shay",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "bin": {
+    "lsctl": "bin/index.js"
+  },
+  "scripts": {
+    "prebuild": "npm run clean",
+    "build": "swc ./src -d ./build",
+    "clean": "rimraf dist build",
+    "lint": "eslint --ignore-path .gitignore ./**/*.ts",
+    "prepare": "npm run build",
+    "prettier": "prettier --ignore-unknown --no-error-on-unmatched-pattern --ignore-path .gitignore './**/*'",
+    "prettier:check": "npm run prettier -- --check",
+    "prettier:write": "npm run prettier -- --write",
+    "test": "jest",
+    "changeset": "changeset",
+    "changeset:publish": "changeset publish",
+    "changeset:version": "changeset version"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "all"
+  },
+  "dependencies": {
+    "@swc/core": "1.2.145",
+    "chalk": "5.0.0",
+    "commander": "9.0.0",
+    "fast-glob": "3.2.11",
+    "rimraf": "3.0.2"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.21.0",
+    "@swc/cli": "0.1.55",
+    "@tsconfig/node16": "1.0.2",
+    "@types/rimraf": "3.0.2",
+    "eslint": "8.9.0",
+    "eslint-config-get-off-my-lawn": "7.0.2",
+    "prettier": "2.5.1",
+    "prettier-plugin-packagejson": "2.2.15",
+    "typescript": "4.5.5"
+  }
+}
