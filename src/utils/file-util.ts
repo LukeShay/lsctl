@@ -2,7 +2,7 @@ import process from 'node:process';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 
-import type { PackageJson } from '../types/package-json.js';
+import type { PackageJson } from '../types/package-json';
 
 const packageJson: PackageJson = JSON.parse(
   readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),

@@ -6,9 +6,9 @@ import fg from 'fast-glob';
 import rimraf from 'rimraf';
 import type { Options } from '@swc/core';
 
-import type { CommandAdder } from '../types/command-adder.js';
-import { packageJson } from '../utils/file-util.js';
-import { hasDependency } from '../utils/dependency-util.js';
+import type { CommandAdder } from '../types/command-adder';
+import { packageJson } from '../utils/file-util';
+import { hasDependency } from '../utils/dependency-util';
 
 const action = async (): Promise<void> => {
   const typescript = await hasDependency('typescript');

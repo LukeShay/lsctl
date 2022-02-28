@@ -1,7 +1,6 @@
-import { packageJson } from './file-util.js';
+import { packageJson } from './file-util';
 
-const hasDependency = async (dependency: string): Promise<boolean> => {
-  return !!packageJson.dependencies?.[dependency] || !!packageJson.devDependencies?.[dependency];
-};
+const hasDependency = (dependency: string): boolean =>
+  Boolean(packageJson.dependencies?.[dependency]) || Boolean(packageJson.devDependencies?.[dependency]);
 
 export { hasDependency };
