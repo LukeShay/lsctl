@@ -1,5 +1,11 @@
 # lsctl
 
+## 0.0.1-next.2
+
+### Patch Changes
+
+- 210b46c: Created test command using jest
+
 ## 0.0.1-next.1
 
 ### Patch Changes
