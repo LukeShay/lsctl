@@ -1,5 +1,11 @@
 # lsctl
 
+## 0.0.1-next.3
+
+### Patch Changes
+
+- 3c0c18d: Added a tsconfig
+
 ## 0.0.1-next.2
 
 ### Patch Changes
