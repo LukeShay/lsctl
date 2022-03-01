@@ -1,5 +1,11 @@
 # lsctl
 
+## 0.0.1-next.4
+
+### Patch Changes
+
+- 596c888: Set module resolution to node
+
 ## 0.0.1-next.3
 
 ### Patch Changes
