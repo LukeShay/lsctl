@@ -2,6 +2,8 @@
   "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
     "types": ["node", "jest"],
-    "module": "ES2020"
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "lib": ["ESNext"]
   }
 }
