@@ -11,25 +11,23 @@ import { packageJson } from '../utils/file-util';
 import { hasDependency } from '../utils/dependency-util';
 
 const action = async (): Promise<void> => {
-  const typescript = await hasDependency('typescript');
+  const typescript = hasDependency('typescript');
   const srcFiles = await fg(['src/**/*.{t,j}s', '!src/**/*.d.ts']);
   const swcConfig: Options = {
-    sourceMaps: 'inline',
-    minify: true,
     jsc: {
-      target: packageJson.type === 'module' ? 'es2020' : 'es5',
       parser: {
         syntax: typescript ? 'typescript' : 'ecmascript',
       },
+      target: packageJson.type === 'module' ? 'es2020' : 'es5',
     },
+    minify: true,
     module: {
-      type: packageJson.type === 'module' ? 'es6' : 'commonjs',
       strict: true,
       strictMode: true,
+      type: packageJson.type === 'module' ? 'es6' : 'commonjs',
     },
+    sourceMaps: 'inline',
   };
-
-  console.log(`SWC Config: ${JSON.stringify(swcConfig, null, 2)}`);
 
   rimraf.sync('dist');
 
