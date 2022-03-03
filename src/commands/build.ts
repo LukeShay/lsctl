@@ -1,14 +1,14 @@
-import { writeFile, mkdir } from 'fs/promises';
 import { dirname } from 'path';
+import { writeFileSync, mkdirSync } from 'fs';
 
 import { transformFile } from '@swc/core';
 import fg from 'fast-glob';
 import rimraf from 'rimraf';
 import type { Options } from '@swc/core';
 
-import type { CommandAdder } from '../types/command-adder';
-import { packageJson } from '../utils/file-util';
 import { hasDependency } from '../utils/dependency-util';
+import { packageJson } from '../utils/file-util';
+import type { CommandAdder } from '../types/command-adder';
 
 const action = async (): Promise<void> => {
   const typescript = hasDependency('typescript');
@@ -37,8 +37,8 @@ const action = async (): Promise<void> => {
 
       const transformed = await transformFile(file, swcConfig);
 
-      await mkdir(dirname(distFilePath), { recursive: true });
-      await writeFile(distFilePath, transformed.code, {
+      mkdirSync(dirname(distFilePath), { recursive: true });
+      writeFileSync(distFilePath, transformed.code, {
         encoding: 'utf8',
       });
     }),
