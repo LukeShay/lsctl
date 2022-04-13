@@ -4,8 +4,11 @@ import { readFileSync } from 'node:fs';
 
 import type { PackageJson } from '../types/package-json';
 
-const packageJson: PackageJson = JSON.parse(
-  readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),
-) as PackageJson;
+const contents = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8')) as PackageJson;
+
+const packageJson: PackageJson = {
+  ...contents,
+  isModule: contents.type === 'module',
+};
 
 export { packageJson };

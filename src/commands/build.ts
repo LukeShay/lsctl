@@ -1,54 +1,56 @@
-import { dirname } from 'path';
-import { writeFileSync, mkdirSync } from 'fs';
+import { dirname } from 'node:path';
+import { writeFile, mkdir } from 'node:fs/promises';
 
 import { transformFile } from '@swc/core';
 import fg from 'fast-glob';
 import rimraf from 'rimraf';
-import type { Options } from '@swc/core';
 
 import { hasDependency } from '../utils/dependency-util';
+import { logDebug, logError, logInfo } from '../utils/log-util';
 import { packageJson } from '../utils/file-util';
 import type { CommandAdder } from '../types/command-adder';
+import { generateSwcConfig } from '../utils/swc-util';
 
 const action = async (): Promise<void> => {
+  logInfo('Building files found in src/');
+
   const typescript = hasDependency('typescript');
-  const srcFiles = await fg(['src/**/*.{t,j}s', '!src/**/*.d.ts']);
-  const swcConfig: Options = {
-    jsc: {
-      parser: {
-        syntax: typescript ? 'typescript' : 'ecmascript',
-      },
-      target: packageJson.type === 'module' ? 'es2020' : 'es5',
-    },
-    minify: true,
-    module: {
-      strict: true,
-      strictMode: true,
-      type: packageJson.type === 'module' ? 'es6' : 'commonjs',
-    },
-    sourceMaps: 'inline',
-  };
+  const srcFiles = await fg(['src/**/*.{t,j}{s,sx}', '!src/**/*.d.ts']);
+  const swcConfig = generateSwcConfig({
+    isModule: packageJson.isModule,
+    typescript,
+  });
 
   rimraf.sync('dist');
 
   await Promise.all(
     srcFiles.map(async (file) => {
-      const distFilePath = file.replace('src/', 'dist/').replace(/\.ts$/u, '.js');
+      try {
+        const distFilePath = file.replace('src/', 'dist/').replace(/\.tsx?$/u, '.js');
 
-      const transformed = await transformFile(file, swcConfig);
+        const transformed = await transformFile(file, swcConfig);
 
-      mkdirSync(dirname(distFilePath), { recursive: true });
-      writeFileSync(distFilePath, transformed.code, {
-        encoding: 'utf8',
-      });
+        await mkdir(dirname(distFilePath), { recursive: true });
+        await writeFile(distFilePath, transformed.code, {
+          encoding: 'utf8',
+        });
+      } catch (error) {
+        logError(`Error building ${file}: ${error.message}`);
+      }
     }),
   );
+
+  logDebug('Built the following files:');
+
+  srcFiles.forEach((file) => {
+    logDebug(`    - ${file}`);
+  });
 };
 
-const addBuildCommand: CommandAdder = (program): void => {
+const addBuildCommand: CommandAdder = (program) => {
   program
     .command('build')
-    .description('Build the TS and JS files in the `src` directory into the `dist` directory')
+    .description('build the TS and JS files in the `src` directory into the `dist` directory')
     .action(action);
 };
 

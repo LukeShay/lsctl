@@ -1,10 +1,11 @@
 type PackageJson = {
-  name?: string;
-  version?: string;
-  description?: string;
-  type?: 'module' | 'commonjs';
   dependencies?: Record<string, string | undefined>;
+  description?: string;
   devDependencies?: Record<string, string | undefined>;
+  isModule: boolean;
+  name?: string;
+  type?: 'commonjs' | 'module';
+  version?: string;
 };
 
 export type { PackageJson };
