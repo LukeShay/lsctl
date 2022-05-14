@@ -1,6 +1,7 @@
+use crate::utils::file_utils;
+use colored::*;
 use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Serialize};
-use std::fs;
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -94,16 +95,17 @@ enum FlyProtocols {
     Https,
 }
 
-pub fn config_new(
-    name: &str,
-    organization: &str,
-    database: bool,
-    file_name: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    println!(
-        "name: {}, organization: {}, database: {}, file_name: {}",
-        name, organization, database, file_name
-    );
+pub fn config_new(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
+    let name = arg_matches.value_of("name").unwrap();
+    let organization = arg_matches.value_of("organization").unwrap();
+    let database = arg_matches.is_present("database");
+    let file_name = arg_matches.value_of("file-name").unwrap();
+
+    println!("Creating new fly config file:");
+    println!("    {:12} {}", "file name".bold(), file_name);
+    println!("    {:12} {}", "name".bold(), name);
+    println!("    {:12} {}", "organization".bold(), organization);
+    println!("    {:12} {}", "database".bold(), database);
 
     let config = FlyConfig {
         name: name.to_string(),
@@ -141,22 +143,27 @@ pub fn config_new(
         }],
     };
 
-    let config_json = serde_json::to_string(&config).unwrap();
+    let config_json = serde_json::to_string_pretty(&config).unwrap();
 
-    return match fs::write(format!("{}.json", file_name), config_json) {
+    return match file_utils::create_and_write_file(file_name, config_json) {
         Ok(_) => Ok(()),
-        Err(e) => Err(Box::new(e)),
+        Err(e) => Err(e),
     };
 }
 
-pub fn config_schema() -> Result<(), Box<dyn std::error::Error>> {
+pub fn config_schema(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
+    let file_name = arg_matches.value_of("file-name").unwrap();
+
+    println!("Outputing fly config schema:");
+    println!("    {} {}", "file name".bold(), file_name);
+
     let schema = schema_for!(FlyConfig);
 
-    return match fs::write(
-        "fly_schema.json",
+    return match file_utils::create_and_write_file(
+        file_name,
         serde_json::to_string_pretty(&schema).unwrap(),
     ) {
         Ok(_) => Ok(()),
-        Err(e) => Err(Box::new(e)),
+        Err(e) => Err(e),
     };
 }

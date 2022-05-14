@@ -1,4 +1,7 @@
 mod cmds;
+mod utils;
+
+static UNREACHABLE: &str = "parser should ensure only valid subcommand names are used";
 
 fn main() {
     let cmd = clap::Command::new(env!("CARGO_CRATE_NAME"))
@@ -46,7 +49,13 @@ fn main() {
                                     .allow_invalid_utf8(false)
                                     .default_value("fly.json")
                                     .required(false)]),
-                            clap::command!("schema").about("Generates the fly config schema"),
+                            clap::command!("schema")
+                                .about("Generates the fly config schema")
+                                .args(&[clap::arg!(--"file-name" <FILE_NAME>)
+                                    .help("The name of the JSON config file")
+                                    .allow_invalid_utf8(false)
+                                    .default_value("fly_schema.json")
+                                    .required(false)]),
                         ]),
                 ),
         );
@@ -55,12 +64,7 @@ fn main() {
         Some(("fly", fly_matches)) => match fly_matches.subcommand() {
             Some(("config", fly_config_matches)) => match fly_config_matches.subcommand() {
                 Some(("new", fly_config_new_matches)) => {
-                    let name = fly_config_new_matches.value_of("name").unwrap();
-                    let organization = fly_config_new_matches.value_of("organization").unwrap();
-                    let database = fly_config_new_matches.is_present("database");
-                    let file_name = fly_config_new_matches.value_of("file-name").unwrap();
-
-                    match cmds::fly_cmds::config_new(name, organization, database, file_name) {
+                    match cmds::fly_cmds::config_new(fly_config_new_matches) {
                         Ok(_) => {}
                         Err(e) => eprintln!("{}", e),
                     }
@@ -70,14 +74,16 @@ fn main() {
 
                     println!("file_name: {}", file_name);
                 }
-                Some(("schema", _)) => match cmds::fly_cmds::config_schema() {
-                    Ok(_) => {}
-                    Err(e) => eprintln!("{}", e),
-                },
-                _ => unreachable!("parser should ensure only valid subcommand names are used"),
+                Some(("schema", fly_config_schema_matches)) => {
+                    match cmds::fly_cmds::config_schema(fly_config_schema_matches) {
+                        Ok(_) => {}
+                        Err(e) => eprintln!("{}", e),
+                    }
+                }
+                _ => unreachable!("{}", UNREACHABLE),
             },
-            _ => unreachable!("parser should ensure only valid subcommand names are used"),
+            _ => unreachable!("{}", UNREACHABLE),
         },
-        _ => unreachable!("parser should ensure only valid subcommand names are used"),
+        _ => unreachable!("{}", UNREACHABLE),
     }
 }
