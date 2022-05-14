@@ -1,0 +1,29 @@
+{
+  name: "the-name",
+  organization: "the-org",
+  gcpKms: { project: "", keyRing: "", key: "", location: "", version: 1 },
+  gcpSsm: { project: "" },
+  database: { postgres: false },
+  metrics: { port: 3000, endpoint: "/metrics" },
+  services: [
+    {
+      internalPort: 3000,
+      processes: ["app"],
+      concurrency: { hardLimit: 25, softLimit: 20, theType: "connections" },
+      ports: [
+        { handlers: ["http"], port: 80 },
+        { handlers: ["tls", "http"], port: 443 },
+      ],
+      healthChecks: [
+        {
+          interval: 10000,
+          gracePeriod: "5s",
+          method: "get",
+          path: "/api/health",
+          protocol: "http",
+          timeout: 2000,
+        },
+      ],
+    },
+  ],
+}
