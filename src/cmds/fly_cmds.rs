@@ -8,8 +8,11 @@ use serde::{Deserialize, Serialize};
 struct FlyConfig {
     name: String,
     organization: String,
+    #[serde(skip_serializing)]
     gcp_kms: Option<FlyConfigGcpKms>,
+    #[serde(skip_serializing)]
     gcp_ssm: Option<FlyConfigGcpSsm>,
+    #[serde(skip_serializing)]
     database: Option<FlyConfigDatabase>,
     metrics: Option<FlyConfigMetrics>,
     services: Vec<FlyConfigService>,
@@ -99,10 +102,10 @@ pub fn config_new(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::err
     let name = arg_matches.value_of("name").unwrap();
     let organization = arg_matches.value_of("organization").unwrap();
     let database = arg_matches.is_present("database");
-    let file_name = arg_matches.value_of("file-name").unwrap();
+    let file_name = arg_matches.value_of("file").unwrap();
 
     println!("Creating new fly config file:");
-    println!("    {:12} {}", "file name".bold(), file_name);
+    println!("    {:12} {}", "file".bold(), file_name);
     println!("    {:12} {}", "name".bold(), name);
     println!("    {:12} {}", "organization".bold(), organization);
     println!("    {:12} {}", "database".bold(), database);
@@ -152,10 +155,10 @@ pub fn config_new(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::err
 }
 
 pub fn config_schema(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
-    let file_name = arg_matches.value_of("file-name").unwrap();
+    let file_name = arg_matches.value_of("file").unwrap();
 
     println!("Outputing fly config schema:");
-    println!("    {} {}", "file name".bold(), file_name);
+    println!("    {} {}", "file".bold(), file_name);
 
     let schema = schema_for!(FlyConfig);
 
@@ -163,6 +166,26 @@ pub fn config_schema(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::
         file_name,
         serde_json::to_string_pretty(&schema).unwrap(),
     ) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e),
+    };
+}
+
+pub fn config_gen(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
+    let input_file = arg_matches.value_of("input-file").unwrap();
+    let output_file = arg_matches.value_of("output-file").unwrap();
+
+    println!("Generating fly config:");
+    println!("    {} {}", "input file".bold(), input_file);
+    println!("    {} {}", "output file".bold(), output_file);
+
+    let contents = std::fs::read_to_string(input_file)?;
+
+    let config: FlyConfig = serde_json::from_str(contents.as_str())?;
+
+    let toml_string = toml::to_string(&config)?;
+
+    return match file_utils::create_and_write_file(output_file, toml_string) {
         Ok(_) => Ok(()),
         Err(e) => Err(e),
     };

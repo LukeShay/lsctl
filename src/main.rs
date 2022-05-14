@@ -36,7 +36,7 @@ fn main() {
                                         .help("Whether or not this app needs a database")
                                         .takes_value(false)
                                         .required(false),
-                                    clap::arg!(--"file-name" <FILE_NAME>)
+                                    clap::arg!(--"file" <FILE_NAME>)
                                         .help("The name of the JSON config file")
                                         .allow_invalid_utf8(false)
                                         .default_value("fly.json")
@@ -44,14 +44,21 @@ fn main() {
                                 ]),
                             clap::command!("gen")
                                 .about("Generates the fly.toml file")
-                                .args(&[clap::arg!(--"file-name" <FILE_NAME>)
-                                    .help("The name of the JSON config file")
-                                    .allow_invalid_utf8(false)
-                                    .default_value("fly.json")
-                                    .required(false)]),
+                                .args(&[
+                                    clap::arg!(--"input-file" <FILE_NAME>)
+                                        .help("The name of the input JSON config file")
+                                        .allow_invalid_utf8(false)
+                                        .default_value("fly.json")
+                                        .required(false),
+                                    clap::arg!(--"output-file" <FILE_NAME>)
+                                        .help("The name of the output Fly toml file")
+                                        .allow_invalid_utf8(false)
+                                        .default_value("fly.toml")
+                                        .required(false),
+                                ]),
                             clap::command!("schema")
                                 .about("Generates the fly config schema")
-                                .args(&[clap::arg!(--"file-name" <FILE_NAME>)
+                                .args(&[clap::arg!(--"file" <FILE_NAME>)
                                     .help("The name of the JSON config file")
                                     .allow_invalid_utf8(false)
                                     .default_value("fly_schema.json")
@@ -70,9 +77,10 @@ fn main() {
                     }
                 }
                 Some(("gen", fly_config_gen_matches)) => {
-                    let file_name = fly_config_gen_matches.value_of("file-name").unwrap();
-
-                    println!("file_name: {}", file_name);
+                    match cmds::fly_cmds::config_gen(fly_config_gen_matches) {
+                        Ok(_) => {}
+                        Err(e) => eprintln!("{}", e),
+                    }
                 }
                 Some(("schema", fly_config_schema_matches)) => {
                     match cmds::fly_cmds::config_schema(fly_config_schema_matches) {

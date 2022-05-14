@@ -10,10 +10,12 @@ run() {
 
 rm -rf target/output/fly/config
 
-run "fly config new --file-name ${BASE_PATH}/config.json --name the-name --organization the-org"
+run "fly config new --file ${BASE_PATH}/config.json --name the-name --organization the-org"
 
 cat "${BASE_PATH}/config.json" &> /dev/null
 
-run "fly config schema --file-name ${BASE_PATH}/schema.json"
+run "fly config schema --file ${BASE_PATH}/schema.json"
 
 cat "${BASE_PATH}/schema.json" &> /dev/null
+
+run "fly config gen --input-file ${BASE_PATH}/config.json --output-file ${BASE_PATH}/fly.toml"
