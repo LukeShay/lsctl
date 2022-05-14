@@ -46,6 +46,7 @@ fn main() {
                                     .allow_invalid_utf8(false)
                                     .default_value("fly.json")
                                     .required(false)]),
+                            clap::command!("schema").about("Generates the fly config schema"),
                         ]),
                 ),
         );
@@ -69,6 +70,10 @@ fn main() {
 
                     println!("file_name: {}", file_name);
                 }
+                Some(("schema", _)) => match cmds::fly_cmds::config_schema() {
+                    Ok(_) => {}
+                    Err(e) => eprintln!("{}", e),
+                },
                 _ => unreachable!("parser should ensure only valid subcommand names are used"),
             },
             _ => unreachable!("parser should ensure only valid subcommand names are used"),
