@@ -25,12 +25,17 @@ jobs:
       matrix:
         include:
           - TARGET: x86_64-unknown-linux-gnu
+            OS: ubuntu-latest
           - TARGET: x86_64-unknown-linux-musl
+            OS: ubuntu-latest
           - TARGET: aarch64-apple-darwin
+            OS: macos-latest
           - TARGET: x86_64-apple-darwin
+            OS: macos-latest
           - TARGET: x86_64-pc-windows-gnu
+            OS: windows-latest
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.OS }}
     env:
       NAME: lsctl
       TARGET: ${{ matrix.TARGET }}
