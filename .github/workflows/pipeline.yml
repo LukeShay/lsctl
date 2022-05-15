@@ -48,8 +48,6 @@ jobs:
             ~/.cargo/registry
             ./target
           key: lsctl-${{matrix.TARGET}}
-      - uses: tenhaus/get-release-or-tag@v2
-        id: tag
       - name: Install cross
         run: cargo install cross
       - name: Run build
@@ -59,13 +57,13 @@ jobs:
         run: |
           mkdir -p ./artifacts
 
-          zip ./artifacts/${{ env.NAME }}-${{ env.TARGET }}-${{ steps.tag.outputs.tag }}.zip ./target/${{ env.TARGET }}/release/${{ env.NAME }}
+          zip ./artifacts/${{ env.NAME }}-${{ env.TARGET }}.zip ./target/${{ env.TARGET }}/release/${{ env.NAME }}
       - name: Compress (windows)
         if: startsWith(matrix.OS, 'windows')
         run: |
           New-Item -Path artifacts -ItemType directory
 
-          Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ env.TARGET }}/release/${{ env.NAME }}.exe -DestinationPath artifacts/${{ env.NAME }}-${{ env.TARGET }}-${{ steps.tag.outputs.tag }}.zip
+          Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ env.TARGET }}/release/${{ env.NAME }}.exe -DestinationPath artifacts/${{ env.NAME }}-${{ env.TARGET }}.zip
       - name: List release files
         run: find ./artifacts/
       - name: Archive artifact
