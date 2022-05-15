@@ -5,22 +5,22 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-struct FlyConfig {
+struct CustomerFlyConfig {
     name: String,
     organization: String,
     #[serde(skip_serializing)]
-    gcp_kms: Option<FlyConfigGcpKms>,
+    gcp_kms: Option<CustomerFlyConfigGcpKms>,
     #[serde(skip_serializing)]
-    gcp_ssm: Option<FlyConfigGcpSsm>,
+    gcp_ssm: Option<CustomerFlyConfigGcpSsm>,
     #[serde(skip_serializing)]
-    database: Option<FlyConfigDatabase>,
-    metrics: Option<FlyConfigMetrics>,
-    services: Vec<FlyConfigService>,
+    database: Option<CustomerFlyConfigDatabase>,
+    metrics: Option<CustomerFlyConfigMetrics>,
+    services: Vec<CustomerFlyConfigService>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-struct FlyConfigGcpKms {
+struct CustomerFlyConfigGcpKms {
     project: String,
     key_ring: String,
     key: String,
@@ -30,36 +30,36 @@ struct FlyConfigGcpKms {
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-struct FlyConfigGcpSsm {
+struct CustomerFlyConfigGcpSsm {
     project: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-struct FlyConfigDatabase {
+struct CustomerFlyConfigDatabase {
     postgres: bool,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-struct FlyConfigMetrics {
+struct CustomerFlyConfigMetrics {
     port: u16,
     endpoint: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-struct FlyConfigService {
+struct CustomerFlyConfigService {
     internal_port: u16,
     processes: Vec<String>,
-    concurrency: FlyConfigServiceConcurrency,
-    ports: Vec<FlyConfigServicePort>,
-    health_checks: Vec<FlyConfigServiceHealthCheck>,
+    concurrency: CustomerFlyConfigServiceConcurrency,
+    ports: Vec<CustomerFlyConfigServicePort>,
+    health_checks: Vec<CustomerFlyConfigServiceHealthCheck>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-struct FlyConfigServiceConcurrency {
+struct CustomerFlyConfigServiceConcurrency {
     hard_limit: u16,
     soft_limit: u16,
     #[serde(alias = "type")]
@@ -68,7 +68,7 @@ struct FlyConfigServiceConcurrency {
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-struct FlyConfigServicePort {
+struct CustomerFlyConfigServicePort {
     handlers: Vec<FlyHandlers>,
     port: u16,
 }
@@ -82,7 +82,7 @@ enum FlyHandlers {
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-struct FlyConfigServiceHealthCheck {
+struct CustomerFlyConfigServiceHealthCheck {
     interval: u16,
     grace_period: String,
     method: String,
@@ -110,32 +110,32 @@ pub fn config_new(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::err
     println!("    {:12} {}", "organization".bold(), organization);
     println!("    {:12} {}", "database".bold(), database);
 
-    let config = FlyConfig {
+    let config = CustomerFlyConfig {
         name: name.to_string(),
         organization: organization.to_string(),
         gcp_kms: None,
         gcp_ssm: None,
-        database: Some(FlyConfigDatabase { postgres: database }),
+        database: Some(CustomerFlyConfigDatabase { postgres: database }),
         metrics: None,
-        services: vec![FlyConfigService {
+        services: vec![CustomerFlyConfigService {
             internal_port: 3000,
             processes: vec!["app".to_string()],
-            concurrency: FlyConfigServiceConcurrency {
+            concurrency: CustomerFlyConfigServiceConcurrency {
                 hard_limit: 25,
                 soft_limit: 20,
                 the_type: "connections".to_string(),
             },
             ports: vec![
-                FlyConfigServicePort {
+                CustomerFlyConfigServicePort {
                     handlers: vec![FlyHandlers::Http],
                     port: 80,
                 },
-                FlyConfigServicePort {
+                CustomerFlyConfigServicePort {
                     handlers: vec![FlyHandlers::Tls, FlyHandlers::Http],
                     port: 443,
                 },
             ],
-            health_checks: vec![FlyConfigServiceHealthCheck {
+            health_checks: vec![CustomerFlyConfigServiceHealthCheck {
                 interval: 10000,
                 grace_period: "5s".to_string(),
                 method: "get".to_string(),
@@ -160,7 +160,7 @@ pub fn config_schema(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::
     println!("Outputing fly config schema:");
     println!("    {} {}", "file".bold(), file_name);
 
-    let schema = schema_for!(FlyConfig);
+    let schema = schema_for!(CustomerFlyConfig);
 
     return match file_utils::create_and_write_file(
         file_name,
@@ -181,7 +181,7 @@ pub fn config_gen(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::err
 
     let contents = std::fs::read_to_string(input_file)?;
 
-    let config: FlyConfig = serde_json::from_str(contents.as_str())?;
+    let config: CustomerFlyConfig = serde_json::from_str(contents.as_str())?;
 
     let toml_string = toml::to_string(&config)?;
 
