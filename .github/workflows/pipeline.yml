@@ -68,6 +68,8 @@ jobs:
           fi
           mv ./target/$TARGET/release/$EXEC ./$EXEC
           tar -czf ./artifacts/$NAME-$TARGET-$TAG.tar.gz $EXEC
+      - name: List release files
+        run: find ./artifacts/
       - name: Archive artifact
         uses: actions/upload-artifact@v2
         with:
@@ -87,7 +89,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: result
-          path: ./artifact
+          path: ./artifacts
       - name: List release files
         run: find ./artifacts/
       - name: Release
