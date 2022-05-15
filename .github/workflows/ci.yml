@@ -3,22 +3,6 @@ name: Rust
 on: [push, pull_request]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Cargo cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/registry
-            ./target
-          key: test-cargo-registry
-      - name: List
-        run: find ./
-      - name: Run tests
-        run: cargo test --verbose
-
   build:
     strategy:
       fail-fast: false
@@ -34,7 +18,6 @@ jobs:
             OS: macos-latest
           - TARGET: x86_64-pc-windows-msvc
             OS: windows-latest
-    needs: test
     runs-on: ${{ matrix.OS }}
     steps:
       - uses: actions/checkout@v2
@@ -47,6 +30,8 @@ jobs:
           key: lsctl-${{ matrix.TARGET }}
       - name: Install cross
         run: cargo install cross
+      - name: Run test
+        run: cross test --verbose --target ${{ matrix.TARGET }}
       - name: Run build
         run: cross build --release --verbose --target ${{ matrix.TARGET }}
       - name: Compress (linux)

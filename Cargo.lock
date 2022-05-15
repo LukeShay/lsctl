@@ -112,7 +112,7 @@ checksum = "5916d2ae698f6de9bfb891ad7a8d65c09d232dc58cc4ac433c7da3b2fd84bc2b"
 
 [[package]]
 name = "lsctl"
-version = "0.0.0-RC.1"
+version = "0.0.1"
 dependencies = [
  "clap",
  "colored",
