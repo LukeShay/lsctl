@@ -3,112 +3,114 @@ name: Rust
 on: [push, pull_request]
 
 jobs:
-  build:
-    name: Test rust ${{ matrix.rust }} on ${{ matrix.os }}
-
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macOS-latest, "windows-latest"]
-        rust: [stable]
-
-        include:
-          - os: ubuntu-latest
-            sccache-path: /home/runner/.cache/sccache
-            rustc-wrapper: sccache
-          - os: macos-latest
-            sccache-path: /Users/runner/Library/Caches/Mozilla.sccache
-            rustc-wrapper: sccache
-          - os: windows-latest
-            rustc-wrapper: ''
-
-    env:
-      RUST_BACKTRACE: full
-      RUSTC_WRAPPER: ${{ matrix.rustc-wrapper }}
-      RUSTV: ${{ matrix.rust }}
-      SCCACHE_CACHE_SIZE: 2G
-      SCCACHE_DIR: ${{ matrix.sccache-path }}
-      # SCCACHE_RECACHE: 1 # Uncomment this to clear cache, then comment it back out
-
+  test:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install sccache (ubuntu-latest)
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          LINK: https://github.com/mozilla/sccache/releases/download
-          SCCACHE_VERSION: v0.2.15
-        run: |
-          SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
-          mkdir -p $HOME/.local/bin
-          curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
-          mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
-          chmod a+x $HOME/.local/bin/sccache
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - name: Install sccache (macos-latest)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew update
-          brew install sccache
-      - name: Install Rust ${{ matrix.rust }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-          profile: minimal
-          override: true
-      - name: Cache cargo registry
+      - name: Cargo cache
         uses: actions/cache@v2
-        continue-on-error: false
         with:
           path: |
             ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-      - name: Save sccache
-        if: matrix.os != 'windows-latest'
-        uses: actions/cache@v2
-        continue-on-error: false
-        with:
-          path: ${{ matrix.sccache-path }}
-          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-sccache-
-      - name: Start sccache server
-        if: matrix.os != 'windows-latest'
-        run: sccache --start-server
-      #- name: ${{ matrix.make.name }}
-      #  run: make ${{ matrix.make.task }}
-
+            ./target
+          key: test-cargo-registry
+      - name: List
+        run: find ./
       - name: Run tests
         run: cargo test --verbose
-      - name: Run clippy
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - TARGET: x86_64-unknown-linux-gnu # tested in a debian container on a mac
+            OS: ubuntu-latest
+          - TARGET: x86_64-unknown-linux-musl # test in an alpine container on a mac
+            OS: ubuntu-latest
+          # - TARGET: aarch64-unknown-linux-gnu # tested on aws t4g.nano
+          #   OS: ubuntu-latest
+          # - TARGET: aarch64-unknown-linux-musl # tested on aws t4g.nano in alpine container
+          #   OS: ubuntu-latest
+          # - TARGET: armv7-unknown-linux-gnueabihf # raspberry pi 2-3-4, not tested
+          #   OS: ubuntu-latest
+          # - TARGET: armv7-unknown-linux-musleabihf # raspberry pi 2-3-4, not tested
+          #   OS: ubuntu-latest
+          # - TARGET: arm-unknown-linux-gnueabihf # raspberry pi 0-1, not tested
+          #   OS: ubuntu-latest
+          # - TARGET: arm-unknown-linux-musleabihf # raspberry pi 0-1, not tested
+            # OS: ubuntu-latest
+          - TARGET: x86_64-apple-darwin # tested on a mac, is not properly signed so there are security warnings
+            OS: macos-latest
+          - TARGET: x86_64-pc-windows-gnu # tested on a windows machine
+            OS: windows-latest
+    needs: test
+    runs-on: ${{ matrix.OS }}
+    env:
+      NAME: rust-cross-compile-example
+      TARGET: ${{ matrix.TARGET }}
+      OS: ${{ matrix.OS }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cargo cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ./target
+          key: build-cargo-registry-${{matrix.TARGET}}
+      - name: List
+        run: find ./
+      - name: Install and configure dependencies
         run: |
-            rustup component add clippy
-            cargo clippy --all-targets --all-features --verbose
-      - name: Build release
-        run: cargo build --verbose --release
-
-      - name: Print sccache stats
-        if: matrix.os != 'windows-latest'
-        run: sccache --show-stats
-      - name: Stop sccache server
-        if: matrix.os != 'windows-latest'
-        run: sccache --stop-server || true
-
-      - name: Upload unix binary
-        uses: actions/upload-artifact@v1
-        if: matrix.os != 'windows-latest'
+          # dependencies are only needed on ubuntu as that's the only place where
+          # we make cross-compilation
+          if [[ $OS =~ ^ubuntu.*$ ]]; then
+            sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf
+          fi
+          # some additional configuration for cross-compilation on linux
+          cat >>~/.cargo/config <<EOF
+          [target.aarch64-unknown-linux-gnu]
+          linker = "aarch64-linux-gnu-gcc"
+          [target.aarch64-unknown-linux-musl]
+          linker = "aarch64-linux-gnu-gcc"
+          [target.armv7-unknown-linux-gnueabihf]
+          linker = "arm-linux-gnueabihf-gcc"
+          [target.armv7-unknown-linux-musleabihf]
+          linker = "arm-linux-gnueabihf-gcc"
+          [target.arm-unknown-linux-gnueabihf]
+          linker = "arm-linux-gnueabihf-gcc"
+          [target.arm-unknown-linux-musleabihf]
+          linker = "arm-linux-gnueabihf-gcc"
+          EOF
+      - name: Install rust target
+        run: rustup target add $TARGET
+      - name: Run build
+        run: cargo build --release --verbose --target $TARGET
+      - name: List target
+        run: find ./target
+      - name: Compress
+        run: |
+          mkdir -p ./artifacts
+          # windows is the only OS using a different convention for executable file name
+          if [[ $OS =~ ^windows.*$ ]]; then
+              EXEC=$NAME.exe
+          else
+              EXEC=$NAME
+          fi
+          if [[ $GITHUB_REF_TYPE =~ ^tag$ ]]; then
+            TAG=$GITHUB_REF_NAME
+          else
+            TAG=$GITHUB_SHA
+          fi
+          mv ./target/$TARGET/release/$EXEC ./$EXEC
+          tar -czf ./artifacts/$NAME-$TARGET-$TAG.tar.gz $EXEC
+      - name: Archive artifact
+        uses: actions/upload-artifact@v2
         with:
-          name: example-cli-${{ matrix.os }}
-          path: target/release/example
-      - name: Upload windows binary
-        uses: actions/upload-artifact@v1
-        if: matrix.os == 'windows-latest'
-        with:
-          name: example-cli-${{ matrix.os }}
-          path: target/release/example.exe
+          name: result
+          path: |
+            ./artifacts
 
   release:
     name: Release
@@ -119,54 +121,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v1
-      - uses: actions/download-artifact@v1
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
         with:
-          name: example-cli-ubuntu-latest
-          path: dist/example-cli-ubuntu-latest
-      - uses: actions/download-artifact@v1
-        with:
-          name: example-cli-macOS-latest
-          path: dist/example-cli-macOS-latest
-      - uses: actions/download-artifact@v1
-        with:
-          name: example-cli-windows-latest
-          path: dist/example-cli-windows-latest
+          name: result
+          path: ./artifact
       - name: List release files
-        run: find dist/
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: find ./artifacts/
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
+          name: Release ${{ github.ref }}
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
           draft: true
-          prerelease: false
-      - name: Upload linux release asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./dist/example-cli-ubuntu-latest/example
-          asset_name: example-linux-x86_64
-          asset_content_type: application/x-elf
-      - name: Upload macos release asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./dist/example-cli-macOS-latest/example
-          asset_name: example-darwin-x86_64
-          asset_content_type: application/x-mach-binary
-      - name: Upload windows release asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./dist/example-cli-windows-latest/example.exe
-          asset_name: example-windows-x86_64.exe
-          asset_content_type: application/vnd.microsoft.portable-executable
+          files: ./artifacts/*.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
