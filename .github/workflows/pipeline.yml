@@ -83,6 +83,10 @@ jobs:
 
       - name: Run tests
         run: cargo test --verbose
+      - name: Run clippy
+        run: |
+            rustup component add clippy
+            cargo clippy --all-targets --all-features --verbose
       - name: Build release
         run: cargo build --verbose --release
 
