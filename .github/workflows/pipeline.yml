@@ -47,11 +47,16 @@ jobs:
           path: |
             ~/.cargo/registry
             ./target
-          key: build-cargo-registry-${{matrix.TARGET}}
+          key: lsctl-${{matrix.TARGET}}
       - name: Install clippy
         run: cargo install cross
       - name: Run build
-        run: cross build --release --verbose --target $TARGET
+        run: |
+          if [[ $OS =~ ^windows.*$ ]]; then 
+              cross build --release --verbose --target x86_64-pc-windows-gnu
+          else
+              cross build --release --verbose --target $TARGET
+          fi
       - name: Compress
         run: |
           mkdir -p ./artifacts
