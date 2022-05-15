@@ -2,8 +2,4 @@
 
 set -e
 
-sed -i.bak -E "s/^version = .+$/version = \"${1}\"/" Cargo.toml
-
-git tag "${1}"
-
-git push --tags
+sed -i.bak -E "s/^version = \"${1}\"$/version = \"${2}\"/" Cargo.toml
