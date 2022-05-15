@@ -32,8 +32,8 @@ jobs:
             OS: macos-latest
           - TARGET: x86_64-apple-darwin
             OS: macos-latest
-          # - TARGET: x86_64-pc-windows-gnu
-          #   OS: windows-latest
+          - TARGET: x86_64-pc-windows-msvc
+            OS: windows-latest
     needs: test
     runs-on: ${{ matrix.OS }}
     env:
@@ -48,26 +48,24 @@ jobs:
             ~/.cargo/registry
             ./target
           key: lsctl-${{matrix.TARGET}}
+      - uses: tenhaus/get-release-or-tag@v2
+        id: tag
       - name: Install cross
         run: cargo install cross
       - name: Run build
         run: cross build --release --verbose --target $TARGET
-      - name: Compress
+      - name: Compress (linux)
+        if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
         run: |
           mkdir -p ./artifacts
-          # windows is the only OS using a different convention for executable file name
-          if [[ $OS =~ ^windows.*$ ]]; then
-              EXEC=$NAME.exe
-          else
-              EXEC=$NAME
-          fi
-          if [[ $GITHUB_REF_TYPE =~ ^tag$ ]]; then
-            TAG=$GITHUB_REF_NAME
-          else
-            TAG=$GITHUB_SHA
-          fi
-          mv ./target/$TARGET/release/$EXEC ./$EXEC
-          tar -czf ./artifacts/$NAME-$TARGET-$TAG.tar.gz $EXEC
+
+          zip ./artifacts/${{ env.NAME }}-${{ env.TARGET }}-${{ steps.tag.outputs.tag }}.zip ./target/${{ env.TARGET }}/release/${{ env.NAME }}
+      - name: Compress (windows)
+        if: startsWith(matrix.OS, 'windows')
+        run: |
+          New-Item -Path artifacts -ItemType directory
+
+          Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ env.TARGET }}/release/${{ env.NAME }}.exe -DestinationPath artifacts/${{ env.NAME }}-${{ env.TARGET }}-${{ steps.tag.outputs.tag }}.zip
       - name: List release files
         run: find ./artifacts/
       - name: Archive artifact
@@ -98,5 +96,5 @@ jobs:
           name: Release ${{ github.ref }}
           tag_name: ${{ github.ref }}
           draft: true
-          files: ./artifacts/*.tar.gz
+          files: ./artifacts/*.zip
           token: ${{ secrets.GITHUB_TOKEN }}
