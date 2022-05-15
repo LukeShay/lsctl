@@ -25,7 +25,7 @@ else
 	lsctl_uri="https://github.com/lukeshay/lsctl/releases/download/${1}/lsctl-${target}.zip"
 fi
 
-lsctl_install="${DENO_INSTALL:-$HOME/.lsctl}"
+lsctl_install="${LSCTL_INSTALL:-$HOME/.lsctl}"
 bin_dir="$lsctl_install/bin"
 exe="$bin_dir/lsctl"
 
@@ -47,7 +47,7 @@ else
 	*) shell_profile=".bash_profile" ;;
 	esac
 	echo "Manually add the directory to your \$HOME/$shell_profile (or similar)"
-	echo "  export DENO_INSTALL=\"$lsctl_install\""
-	echo "  export PATH=\"\$DENO_INSTALL/bin:\$PATH\""
+	echo "  export LSCTL_INSTALL=\"$lsctl_install\""
+	echo "  export PATH=\"\$LSCTL_INSTALL/bin:\$PATH\""
 	echo "Run '$exe --help' to get started"
 fi
