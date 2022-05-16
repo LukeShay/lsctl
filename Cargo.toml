@@ -1,7 +1,16 @@
 [package]
 name = "lsctl"
 version = "0.0.2-RC.1"
+include = ["Cargo.toml", "src/**/*.rs"]
+description = "CLI to help simplify my workflows"
+authors = ["Luke Shay <https://github.com/lukeshay>"]
 edition = "2021"
+repository = "https://github.com/swc-project/swc.git"
+
+[[bin]]
+bench = false
+name = "lsctl"
+path = "./src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

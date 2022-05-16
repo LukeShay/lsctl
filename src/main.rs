@@ -6,7 +6,7 @@ static UNREACHABLE: &str = "parser should ensure only valid subcommand names are
 fn main() {
     let cmd = clap::Command::new(env!("CARGO_CRATE_NAME"))
         .bin_name(env!("CARGO_CRATE_NAME"))
-        .author("Luke Shay - https://lukeshay.com/")
+        .author("Luke Shay - https://lukeshay.com")
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(
@@ -21,7 +21,7 @@ fn main() {
                         .arg_required_else_help(true)
                         .subcommands(vec![
                             clap::command!("new")
-                                .about("Generates a new config file")
+                                .about("Generates a new fly config file")
                                 .arg_required_else_help(true)
                                 .args(&[
                                     clap::arg!(--"name" <NAME>)
