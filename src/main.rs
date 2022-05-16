@@ -72,31 +72,27 @@ fn main() {
                 ),
         );
 
-    match cmd.get_matches().subcommand() {
+    let result = match cmd.get_matches().subcommand() {
         Some(("fly", fly_matches)) => match fly_matches.subcommand() {
             Some(("config", fly_config_matches)) => match fly_config_matches.subcommand() {
                 Some(("new", fly_config_new_matches)) => {
-                    match cmds::fly_cmds::config_new(fly_config_new_matches) {
-                        Ok(_) => {}
-                        Err(e) => eprintln!("{}", e),
-                    }
+                    cmds::fly_cmds::config_new(fly_config_new_matches)
                 }
                 Some(("gen", fly_config_gen_matches)) => {
-                    match cmds::fly_cmds::config_gen(fly_config_gen_matches) {
-                        Ok(_) => {}
-                        Err(e) => eprintln!("{}", e),
-                    }
+                    cmds::fly_cmds::config_gen(fly_config_gen_matches)
                 }
                 Some(("schema", fly_config_schema_matches)) => {
-                    match cmds::fly_cmds::config_schema(fly_config_schema_matches) {
-                        Ok(_) => {}
-                        Err(e) => eprintln!("{}", e),
-                    }
+                    cmds::fly_cmds::config_schema(fly_config_schema_matches)
                 }
                 _ => unreachable!("{}", UNREACHABLE),
             },
             _ => unreachable!("{}", UNREACHABLE),
         },
         _ => unreachable!("{}", UNREACHABLE),
+    };
+
+    match result {
+        Ok(_) => {}
+        Err(e) => eprintln!("{}", e),
     }
 }
