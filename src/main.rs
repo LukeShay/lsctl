@@ -31,12 +31,14 @@ fn main() {
                                     clap::arg!(--"organization" <ORGANIZATION>)
                                         .help("The organization of the fly app")
                                         .allow_invalid_utf8(false)
+                                        .alias("org")
                                         .required(true),
                                     clap::arg!(--"database" <DATABASE>)
                                         .help("Whether or not this app needs a database")
                                         .takes_value(false)
                                         .required(false),
                                     clap::arg!(--"file" <FILE_NAME>)
+                                        .short('o')
                                         .help("The name of the JSON config file")
                                         .allow_invalid_utf8(false)
                                         .default_value("fly.json")
@@ -46,11 +48,13 @@ fn main() {
                                 .about("Generates the fly.toml file")
                                 .args(&[
                                     clap::arg!(--"input-file" <FILE_NAME>)
+                                        .short('i')
                                         .help("The name of the input JSON config file")
                                         .allow_invalid_utf8(false)
                                         .default_value("fly.json")
                                         .required(false),
                                     clap::arg!(--"output-file" <FILE_NAME>)
+                                        .short('o')
                                         .help("The name of the output Fly toml file")
                                         .allow_invalid_utf8(false)
                                         .default_value("fly.toml")
@@ -59,6 +63,7 @@ fn main() {
                             clap::command!("schema")
                                 .about("Generates the fly config schema")
                                 .args(&[clap::arg!(--"file" <FILE_NAME>)
+                                    .short('o')
                                     .help("The name of the JSON config file")
                                     .allow_invalid_utf8(false)
                                     .default_value("fly_schema.json")

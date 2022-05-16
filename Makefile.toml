@@ -1,0 +1,33 @@
+[tasks.clean]
+command = "cargo"
+args = ["clean"]
+
+[tasks.build]
+command = "cargo"
+args = ["build"]
+dependencies = ["clean"]
+
+[tasks.test]
+command = "cargo"
+args = ["test", "--verbose"]
+dependencies = ["clean"]
+
+[tasks.clippy]
+command = "cargo"
+args = ["clippy", "--all", "--all-targets", "--all-features", "--verbose"]
+
+[tasks.fmt]
+command = "cargo"
+args = ["fmt", "--verbose"]
+
+[tasks.fmt-check]
+command = "cargo"
+args = ["fmt", "--check", "--verbose"]
+
+[tasks.check]
+dependencies = [
+  "build",
+  "test",
+  "fmt-check",
+  "clippy"
+]

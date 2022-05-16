@@ -107,8 +107,8 @@ struct FlyServiceConcurrency {
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all(deserialize = "lowercase", serialize = "lowercase"))]
 enum FlyServiceProtocol {
-    TCP,
-    UDP,
+    Tcp,
+    Udp,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
@@ -205,7 +205,7 @@ pub fn config_new(arg_matches: &clap::ArgMatches) -> Result<(), Box<dyn std::err
         services: Some(vec![FlyService {
             internal_port: 3000,
             processes: vec!["app".to_string()],
-            protocol: Some(FlyServiceProtocol::TCP),
+            protocol: Some(FlyServiceProtocol::Tcp),
             tcp_checks: None,
             concurrency: FlyServiceConcurrency {
                 hard_limit: Some(25),
