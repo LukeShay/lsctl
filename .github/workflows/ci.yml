@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     tags:
-      - '*'
+      - 'v[0-9]+\.[0-9]+\.[0-9]+'
     branches:
       - main
   pull_request:
@@ -98,7 +98,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Release ${{ steps.get_version.outputs.VERSION }}
+          name: ${{ steps.get_version.outputs.VERSION }}
           tag_name: ${{ github.ref }}
           draft: false
           generate_release_notes: true
