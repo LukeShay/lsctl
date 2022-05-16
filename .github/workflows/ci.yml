@@ -83,7 +83,7 @@ jobs:
             target/
           key: ${{ runner.os }}-${{ matrix.TARGET }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install cross
-        run: cargo install cross
+        run: cargo install cross --force
       - name: Run build
         run: cross build --release --verbose --target ${{ matrix.TARGET }}
       - name: Compress (unix)
