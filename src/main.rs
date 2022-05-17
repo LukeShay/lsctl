@@ -1,5 +1,5 @@
 use clap::Parser;
-use commands::{Command, CommandRunner, FlyConfigSubcommand, FlySubcommand, LsctlOptions};
+use commands::*;
 
 mod commands;
 mod utils;
@@ -13,5 +13,6 @@ fn main() -> anyhow::Result<()> {
         Command::Fly(FlySubcommand::Config(FlyConfigSubcommand::Schema(options))) => {
             options.execute()
         }
+        Command::Js(JsSubcommand::Build(options)) => options.execute(),
     }
 }
