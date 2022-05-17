@@ -189,8 +189,8 @@ pub struct FlyConfigNewOptions {
     pub organization: String,
 
     /// Whether or not this app needs a database
-    #[clap(long)]
-    pub file: Option<String>,
+    #[clap(long, default_value = "fly.json")]
+    pub file: String,
 
     /// The name of the JSON config file
     #[clap(long)]
@@ -199,7 +199,7 @@ pub struct FlyConfigNewOptions {
 
 impl super::CommandRunner for FlyConfigNewOptions {
     fn execute(&self) -> anyhow::Result<()> {
-        let file = &self.file.as_deref().unwrap_or("fly.json");
+        let file = &self.file;
         let name = &self.name;
         let organization = &self.organization;
         let database = *&self.database;
@@ -271,18 +271,18 @@ impl super::CommandRunner for FlyConfigNewOptions {
 #[derive(Parser, Debug)]
 pub struct FlyConfigGenOptions {
     /// The name of the input JSON config file
-    #[clap(long, short)]
-    pub input_file: Option<String>,
+    #[clap(long, short, default_value = "fly.json")]
+    pub input_file: String,
 
     /// The name of the output Fly toml file
-    #[clap(long, short)]
-    pub output_file: Option<String>,
+    #[clap(long, short, default_value = "fly.toml")]
+    pub output_file: String,
 }
 
 impl super::CommandRunner for FlyConfigGenOptions {
     fn execute(&self) -> anyhow::Result<()> {
-        let input_file = &self.input_file.as_deref().unwrap_or("fly.json");
-        let output_file = &self.output_file.as_deref().unwrap_or("fly.toml");
+        let input_file = &self.input_file;
+        let output_file = &self.output_file;
 
         println!("Generating fly config:");
         println!("    {} {}", "input file".bold(), input_file);
