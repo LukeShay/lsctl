@@ -1,5 +1,4 @@
 /// Ripped off from https://github.com/swc-project/swc/blob/main/crates/swc_cli/src/commands/compile.rs
-
 use std::{
     fs::{self, File},
     io::{self, BufRead, Write},

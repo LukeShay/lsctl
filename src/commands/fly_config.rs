@@ -202,7 +202,7 @@ impl super::CommandRunner for FlyConfigNewOptions {
         let file = &self.file;
         let name = &self.name;
         let organization = &self.organization;
-        let database = *&self.database;
+        let database = &self.database;
 
         println!("Creating new fly config file:");
         println!("    {:12} {}", "file".bold(), file);
@@ -221,7 +221,9 @@ impl super::CommandRunner for FlyConfigNewOptions {
             statics: None,
             gcp_kms: None,
             gcp_ssm: None,
-            database: Some(FlyDatabase { postgres: database }),
+            database: Some(FlyDatabase {
+                postgres: *database,
+            }),
             // metrics: None,
             services: Some(vec![FlyService {
                 internal_port: 3000,

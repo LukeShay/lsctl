@@ -6,12 +6,21 @@ include = ["Cargo.toml", "src/**/*.rs"]
 license = "MIT"
 name = "lsctl"
 repository = "https://github.com/swc-project/swc.git"
-version = "0.0.2-RC.1"
+version = "0.0.2-RC.2"
 
 [[bin]]
 bench = false
 name = "lsctl"
 path = "./src/main.rs"
+
+[features]
+default = []
+plugin = [
+  "swc/plugin",
+  "swc_plugin_runner/filesystem_cache",
+  "wasmer/default",
+  "wasmer-wasi/default",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -32,3 +41,5 @@ swc_common = { version = "0.18.0" }
 swc_plugin_runner = { version = "0.55.0", default-features = false, optional = true}
 toml = "0.5.9"
 walkdir = "2"
+wasmer = {version = "2.2.1", optional = true}
+wasmer-wasi = {version = "2.2.1", optional = true}
