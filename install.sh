@@ -25,6 +25,8 @@ else
 	lsctl_uri="https://github.com/lukeshay/lsctl/releases/download/${1}/lsctl-${target}.zip"
 fi
 
+echo "Download lsctl from ${lsctl_uri}"
+
 lsctl_install="${LSCTL_INSTALL:-$HOME/.lsctl}"
 bin_dir="$lsctl_install/bin"
 exe="$bin_dir/lsctl"
@@ -39,6 +41,7 @@ chmod +x "$exe"
 rm "$exe.zip"
 
 echo "lsctl was installed successfully to $exe"
+
 if command -v lsctl >/dev/null; then
 	echo "Run 'lsctl --help' to get started"
 else
