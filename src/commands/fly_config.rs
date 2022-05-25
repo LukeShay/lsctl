@@ -101,7 +101,7 @@ struct FlyService {
 struct FlyServiceConcurrency {
     hard_limit: Option<u64>,
     soft_limit: Option<u64>,
-    #[serde(alias = "type")]
+    #[serde(rename(serialize = "type", deserialize = "type"))]
     the_type: String,
 }
 
