@@ -62,7 +62,7 @@ struct FlyStatic {
 enum FlyDeployStrategy {
     Canary,
     Rolling,
-    BlueGreen,
+    Bluegreen,
     Immediate,
 }
 
