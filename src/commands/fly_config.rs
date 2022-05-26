@@ -1,4 +1,6 @@
 use clap::{Parser, Subcommand};
+use handlebars::Handlebars;
+use serde_json::json;
 use std::collections::HashMap;
 
 use crate::utils::file_utils;
@@ -279,6 +281,10 @@ pub struct FlyConfigGenOptions {
     /// The name of the output Fly toml file
     #[clap(long, short, default_value = "fly.toml")]
     pub output_file: String,
+
+    /// The environment to generate the Fly config for
+    #[clap(long, short, default_value = "dev")]
+    pub environment: String,
 }
 
 impl super::CommandRunner for FlyConfigGenOptions {
@@ -292,7 +298,14 @@ impl super::CommandRunner for FlyConfigGenOptions {
 
         let contents = std::fs::read_to_string(input_file)?;
 
-        let deploy_config: DeployConfig = serde_json::from_str(contents.as_str())?;
+        let reg = Handlebars::new();
+
+        let rendered_contents = reg.render_template(
+            contents.as_str(),
+            &json!({"environment": &self.environment}),
+        )?;
+
+        let deploy_config: DeployConfig = serde_json::from_str(rendered_contents.as_str())?;
 
         let fly_config = FlyConfig {
             name: deploy_config.name,

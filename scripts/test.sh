@@ -10,7 +10,7 @@ run() {
 
 rm -rf target/output/fly/config
 
-run "fly config new --file ${BASE_PATH}/config.json --name the-name --organization the-org"
+run "fly config new --file ${BASE_PATH}/config.json --name 'the-{{ environment }}-name' --organization 'the-{{ environment }}-org'"
 
 cat "${BASE_PATH}/config.json" &> /dev/null
 
