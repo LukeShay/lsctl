@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 
 mod fly;
@@ -26,6 +27,7 @@ pub struct LsctlOptions {
     pub command: Command,
 }
 
+#[async_trait]
 pub trait CommandRunner {
-    fn execute(&self) -> anyhow::Result<()>;
+    async fn execute(&self) -> anyhow::Result<()>;
 }

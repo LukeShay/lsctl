@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-
+use async_trait::async_trait;
 use anyhow::Context;
 use clap::{Parser, Subcommand};
 use glob::glob;
@@ -402,8 +402,9 @@ impl JsBuildOptions {
     }
 }
 
+#[async_trait]
 impl super::CommandRunner for JsBuildOptions {
-    fn execute(&self) -> anyhow::Result<()> {
+    async fn execute(&self) -> anyhow::Result<()> {
         self.execute_inner()
     }
 }

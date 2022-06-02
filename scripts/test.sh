@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXECUTABLE="${EXECUTABLE:-"${PWD}/target/release/lsctl"}"
+EXECUTABLE="${1:-"${PWD}/target/release/lsctl"}"
 
 BASE_PATH="target/output/fly/config"
 

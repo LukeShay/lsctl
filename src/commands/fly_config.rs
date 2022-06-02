@@ -1,9 +1,11 @@
+use async_trait::async_trait;
 use clap::{Parser, Subcommand};
+use futures::executor::block_on;
 use handlebars::Handlebars;
 use serde_json::json;
 use std::collections::HashMap;
 
-use crate::utils::file_utils;
+use crate::utils::{file_utils, gcp_ssm};
 use colored::*;
 use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Serialize};
@@ -22,6 +24,22 @@ struct DeployConfig {
     statics: Option<Vec<FlyStatic>>,
     services: Option<Vec<FlyService>>,
     mounts: Option<Vec<FlyMount>>,
+    environment: Option<HashMap<String, Vec<EnvironmentVariable>>>,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+struct EnvironmentVariable {
+    key: String,
+    #[serde(flatten)]
+    value: EnvironmentVariableValue,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[serde(rename_all(deserialize = "snake_case", serialize = "snake_case"))]
+enum EnvironmentVariableValue {
+    Value(String),
+    FromGcpKms { value: String },
+    FromGcpSsm { name: String, version: u16 },
 }
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
@@ -35,6 +53,7 @@ struct FlyConfig {
     statics: Option<Vec<FlyStatic>>,
     services: Option<Vec<FlyService>>,
     mounts: Option<Vec<FlyMount>>,
+    env: Option<HashMap<String, String>>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
@@ -199,8 +218,9 @@ pub struct FlyConfigNewOptions {
     pub database: bool,
 }
 
+#[async_trait]
 impl super::CommandRunner for FlyConfigNewOptions {
-    fn execute(&self) -> anyhow::Result<()> {
+    async fn execute(&self) -> anyhow::Result<()> {
         let file = &self.file;
         let name = &self.name;
         let organization = &self.organization;
@@ -211,6 +231,31 @@ impl super::CommandRunner for FlyConfigNewOptions {
         println!("    {:12} {}", "name".bold(), name);
         println!("    {:12} {}", "organization".bold(), organization);
         println!("    {:12} {}", "database".bold(), database);
+
+        let mut environment_map: HashMap<String, Vec<EnvironmentVariable>> = HashMap::new();
+
+        environment_map.insert(
+            "all".to_string(),
+            vec![
+                EnvironmentVariable {
+                    key: "PLAINTEXT_VALUE".to_string(),
+                    value: EnvironmentVariableValue::Value("plaintext value".to_string()),
+                },
+                EnvironmentVariable {
+                    key: "FROM_GCP_KMS_VALUE".to_string(),
+                    value: EnvironmentVariableValue::FromGcpKms {
+                        value: "kms string".to_string(),
+                    },
+                },
+                EnvironmentVariable {
+                    key: "FROM_GCP_SSM_VALUE".to_string(),
+                    value: EnvironmentVariableValue::FromGcpSsm {
+                        name: "ssm name".to_string(),
+                        version: 1,
+                    },
+                },
+            ],
+        );
 
         let config = DeployConfig {
             name: name.to_string(),
@@ -226,6 +271,7 @@ impl super::CommandRunner for FlyConfigNewOptions {
             database: Some(FlyDatabase {
                 postgres: *database,
             }),
+            environment: Some(environment_map),
             // metrics: None,
             services: Some(vec![FlyService {
                 internal_port: 3000,
@@ -287,8 +333,9 @@ pub struct FlyConfigGenOptions {
     pub environment: String,
 }
 
+#[async_trait]
 impl super::CommandRunner for FlyConfigGenOptions {
-    fn execute(&self) -> anyhow::Result<()> {
+    async fn execute(&self) -> anyhow::Result<()> {
         let input_file = &self.input_file;
         let output_file = &self.output_file;
 
@@ -307,6 +354,47 @@ impl super::CommandRunner for FlyConfigGenOptions {
 
         let deploy_config: DeployConfig = serde_json::from_str(rendered_contents.as_str())?;
 
+        let gcp_ssm = deploy_config.gcp_ssm;
+
+        let mut environment: HashMap<String, String> = HashMap::new();
+
+        match deploy_config.environment {
+            Some(env) => {
+                env.into_iter().for_each(|(k, v)| match k.as_str() {
+                    "all" => {
+                        v.into_iter().for_each(|env_var| match env_var.value {
+                            EnvironmentVariableValue::Value(value) => {
+                                environment.insert(env_var.key, value);
+                            }
+                            EnvironmentVariableValue::FromGcpKms { value } => {
+                                environment.insert(env_var.key, value);
+                            }
+                            EnvironmentVariableValue::FromGcpSsm { name, version } => {
+                                block_on(async {
+                                    let value = gcp_ssm::access_secret_version(
+                                        gcp_ssm::get_secret_manager().await.unwrap(),
+                                        gcp_ssm
+                                            .as_ref()
+                                            .expect("gcp_ssm config is not set")
+                                            .project
+                                            .as_str(),
+                                        name.as_str(),
+                                        version,
+                                    )
+                                    .await
+                                    .unwrap();
+
+                                    environment.insert(env_var.key, value);
+                                });
+                            }
+                        });
+                    }
+                    _ => {}
+                });
+            }
+            None => {}
+        }
+
         let fly_config = FlyConfig {
             name: deploy_config.name,
             organization: deploy_config.organization,
@@ -317,6 +405,7 @@ impl super::CommandRunner for FlyConfigGenOptions {
             mounts: deploy_config.mounts,
             statics: deploy_config.statics,
             services: deploy_config.services,
+            env: Some(environment),
         };
 
         let toml_string = toml::to_string(&fly_config)?;
@@ -335,8 +424,9 @@ pub struct FlyConfigSchemaOptions {
     pub file: Option<String>,
 }
 
+#[async_trait]
 impl super::CommandRunner for FlyConfigSchemaOptions {
-    fn execute(&self) -> anyhow::Result<()> {
+    async fn execute(&self) -> anyhow::Result<()> {
         let file = &self.file.as_deref().unwrap_or("schema.json");
 
         println!("Outputing fly config schema:");
