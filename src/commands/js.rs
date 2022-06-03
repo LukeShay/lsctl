@@ -1,3 +1,10 @@
+use anyhow::Context;
+use async_trait::async_trait;
+use clap::{Parser, Subcommand};
+use glob::glob;
+use path_absolutize::Absolutize;
+use rayon::prelude::*;
+use relative_path::RelativePath;
 /// Ripped off from https://github.com/swc-project/swc/blob/main/crates/swc_cli/src/commands/compile.rs
 use std::{
     fs::{self, File},
@@ -5,13 +12,6 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-use async_trait::async_trait;
-use anyhow::Context;
-use clap::{Parser, Subcommand};
-use glob::glob;
-use path_absolutize::Absolutize;
-use rayon::prelude::*;
-use relative_path::RelativePath;
 use swc::{
     config::{Config, Options},
     try_with_handler, Compiler, HandlerOpts, TransformOutput,
