@@ -2,7 +2,7 @@
 
 set -e
 
-TAG="$(cat Cargo.toml | grep "^version = .*" | sed -E "s/^version = \"(.*)\"$/\1/")"
+current_version="$(./scripts/current_version.sh)"
 
-git tag "v${TAG}"
-git push origin "v${TAG}"
+git tag "v${current_version}"
+git push origin "v${current_version}"
