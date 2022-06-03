@@ -1,13 +1,14 @@
 use super::hyper_utils::create_ssl_client;
 use anyhow;
 use base64;
-use google_secretmanager1::{
+use google_cloudkms1::{
+    api::DecryptRequest,
     oauth2::{
         authenticator::{ApplicationDefaultCredentialsTypes, Authenticator},
         read_authorized_user_secret, ApplicationDefaultCredentialsAuthenticator,
         ApplicationDefaultCredentialsFlowOpts, AuthorizedUserAuthenticator,
     },
-    SecretManager,
+    CloudKMS,
 };
 use hyper::client::HttpConnector;
 use hyper_rustls::HttpsConnector;
@@ -50,32 +51,41 @@ async fn get_authenticator() -> Authenticator<HttpsConnector<HttpConnector>> {
     }
 }
 
-pub async fn get_secret_manager() -> SecretManager {
+pub async fn get_cloud_kms() -> CloudKMS {
     let authenticator = get_authenticator().await;
 
-    SecretManager::new(create_ssl_client(), authenticator)
+    CloudKMS::new(create_ssl_client(), authenticator)
 }
 
-pub async fn access_secret_version(
-    secret_manager: SecretManager,
+pub async fn decrypt_ciphertext(
+    cloud_kms: CloudKMS,
     project_id: &str,
-    secret_name: &str,
-    version: u16,
+    location: &str,
+    key_ring: &str,
+    key: &str,
+    ciphertext: &str,
 ) -> anyhow::Result<String> {
-    let (_, secret_version) = secret_manager
+    let mut request = DecryptRequest::default();
+    request.ciphertext = Some(ciphertext.to_string());
+
+    let result = cloud_kms
         .projects()
-        .secrets_versions_access(
+        .locations_key_rings_crypto_keys_decrypt(
+            request,
             format!(
-                "projects/{}/secrets/{}/versions/{}",
-                project_id, secret_name, version
+                "projects/{}/locations/{}/keyRings/{}/cryptoKeys/{}",
+                project_id, location, key_ring, key
             )
             .as_str(),
         )
         .doit()
-        .await?;
+        .await;
 
-    anyhow::Ok(
-        String::from_utf8(base64::decode(secret_version.payload.unwrap().data.unwrap()).unwrap())
-            .unwrap(),
-    )
+    match result {
+        Ok((_, secret_version)) => Ok(String::from_utf8(
+            base64::decode(secret_version.plaintext.unwrap()).unwrap(),
+        )
+        .unwrap()),
+        Err(err) => Err(anyhow::anyhow!(err)),
+    }
 }

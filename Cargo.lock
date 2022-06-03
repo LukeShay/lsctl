@@ -907,6 +907,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
+name = "google-cloudkms1"
+version = "3.1.0+20220225"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6964eb2bf61e385fd7d0d50719e4ba71d92659137b3ea0614339fb1ba04c72d9"
+dependencies = [
+ "hyper",
+ "hyper-rustls",
+ "itertools",
+ "mime",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "url 1.7.2",
+ "yup-oauth2",
+]
+
+[[package]]
 name = "google-secretmanager1"
 version = "3.1.0+20220226"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1342,6 +1359,7 @@ dependencies = [
  "colored",
  "futures",
  "glob",
+ "google-cloudkms1",
  "google-secretmanager1",
  "handlebars",
  "hyper",

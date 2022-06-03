@@ -1,3 +1,4 @@
+use anyhow;
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 use futures::executor::block_on;
@@ -5,12 +6,12 @@ use handlebars::Handlebars;
 use serde_json::json;
 use std::collections::HashMap;
 
-use crate::utils::{file_utils, gcp_ssm};
+use crate::utils::{file_utils, gcp_kms, gcp_ssm};
 use colored::*;
 use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct DeployConfig {
     name: String,
     organization: String,
@@ -27,14 +28,14 @@ struct DeployConfig {
     environment: Option<HashMap<String, Vec<EnvironmentVariable>>>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct EnvironmentVariable {
     key: String,
     #[serde(flatten)]
     value: EnvironmentVariableValue,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all(deserialize = "snake_case", serialize = "snake_case"))]
 enum EnvironmentVariableValue {
     Value(String),
@@ -42,7 +43,7 @@ enum EnvironmentVariableValue {
     FromGcpSsm { name: String, version: u16 },
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyConfig {
     name: String,
     organization: String,
@@ -56,7 +57,7 @@ struct FlyConfig {
     env: Option<HashMap<String, String>>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyBuild {
     builder: Option<String>,
     image: Option<String>,
@@ -66,19 +67,19 @@ struct FlyBuild {
     args: Option<HashMap<String, String>>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyDeploy {
     release_command: Option<String>,
     strategy: Option<FlyDeployStrategy>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyStatic {
     guest_path: String,
     url_prefix: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all(deserialize = "camelCase", serialize = "lowercase"))]
 enum FlyDeployStrategy {
     Canary,
@@ -87,26 +88,25 @@ enum FlyDeployStrategy {
     Immediate,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyGcpKms {
     project: String,
     key_ring: String,
     key: String,
     location: String,
-    version: Option<u64>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyGcpSsm {
     project: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyDatabase {
     postgres: bool,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyService {
     internal_port: u64,
     processes: Vec<String>,
@@ -118,7 +118,7 @@ struct FlyService {
     protocol: Option<FlyServiceProtocol>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyServiceConcurrency {
     hard_limit: Option<u64>,
     soft_limit: Option<u64>,
@@ -126,28 +126,28 @@ struct FlyServiceConcurrency {
     the_type: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all(deserialize = "lowercase", serialize = "lowercase"))]
 enum FlyServiceProtocol {
     Tcp,
     Udp,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyServicePort {
     port: u64,
     force_https: Option<bool>,
     handlers: Vec<FlyServicePortHandler>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all(deserialize = "camelCase", serialize = "lowercase"))]
 enum FlyServicePortHandler {
     Http,
     Tls,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyServiceHttpCheck {
     interval: Option<u64>,
     grace_period: Option<String>,
@@ -160,7 +160,7 @@ struct FlyServiceHttpCheck {
     headers: Option<HashMap<String, String>>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyServiceTcpCheck {
     interval: Option<u64>,
     grace_period: Option<String>,
@@ -168,14 +168,14 @@ struct FlyServiceTcpCheck {
     restart_limit: Option<u64>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all(deserialize = "camelCase", serialize = "lowercase"))]
 enum FlyServiceHttpCheckProtocol {
     Http,
     Https,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(rename_all(deserialize = "camelCase", serialize = "UPPERCASE"))]
 enum FlyKillSignal {
     SigInt,
@@ -187,19 +187,19 @@ enum FlyKillSignal {
     SigStop,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyMount {
     source: String,
     destination: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyExperimental {
     cmd: Option<Vec<String>>,
     entrypoint: Option<Vec<String>>,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Clone, Parser, Debug)]
 pub struct FlyConfigNewOptions {
     /// The name of the fly app
     #[clap(long)]
@@ -318,7 +318,7 @@ impl super::CommandRunner for FlyConfigNewOptions {
     }
 }
 
-#[derive(Parser, Debug)]
+#[derive(Clone, Parser, Debug)]
 pub struct FlyConfigGenOptions {
     /// The name of the input JSON config file
     #[clap(long, short, default_value = "fly.json")]
@@ -338,6 +338,7 @@ impl super::CommandRunner for FlyConfigGenOptions {
     async fn execute(&self) -> anyhow::Result<()> {
         let input_file = &self.input_file;
         let output_file = &self.output_file;
+        let environment = &self.environment;
 
         println!("Generating fly config:");
         println!("    {} {}", "input file".bold(), input_file);
@@ -354,40 +355,18 @@ impl super::CommandRunner for FlyConfigGenOptions {
 
         let deploy_config: DeployConfig = serde_json::from_str(rendered_contents.as_str())?;
 
-        let gcp_ssm = deploy_config.gcp_ssm;
+        let mut environment_map: HashMap<String, String> = HashMap::new();
 
-        let mut environment: HashMap<String, String> = HashMap::new();
-
-        match deploy_config.environment {
+        match &deploy_config.environment {
             Some(env) => {
-                env.into_iter().for_each(|(k, v)| match k.as_str() {
+                env.iter().for_each(|(k, v)| match k.as_str() {
                     "all" => {
-                        v.into_iter().for_each(|env_var| match env_var.value {
-                            EnvironmentVariableValue::Value(value) => {
-                                environment.insert(env_var.key, value);
-                            }
-                            EnvironmentVariableValue::FromGcpKms { value } => {
-                                environment.insert(env_var.key, value);
-                            }
-                            EnvironmentVariableValue::FromGcpSsm { name, version } => {
-                                block_on(async {
-                                    let value = gcp_ssm::access_secret_version(
-                                        gcp_ssm::get_secret_manager().await.unwrap(),
-                                        gcp_ssm
-                                            .as_ref()
-                                            .expect("gcp_ssm config is not set")
-                                            .project
-                                            .as_str(),
-                                        name.as_str(),
-                                        version,
-                                    )
-                                    .await
-                                    .unwrap();
-
-                                    environment.insert(env_var.key, value);
-                                });
-                            }
-                        });
+                        let environment_all = insert_environment_variables(&deploy_config, v);
+                        environment_map.extend(environment_all);
+                    }
+                    other if other == environment.as_str() => {
+                        let environment_all = insert_environment_variables(&deploy_config, v);
+                        environment_map.extend(environment_all);
                     }
                     _ => {}
                 });
@@ -405,19 +384,80 @@ impl super::CommandRunner for FlyConfigGenOptions {
             mounts: deploy_config.mounts,
             statics: deploy_config.statics,
             services: deploy_config.services,
-            env: Some(environment),
+            env: Some(environment_map),
         };
 
         let toml_string = toml::to_string(&fly_config)?;
 
         return match file_utils::create_and_write_file(output_file, toml_string) {
-            Ok(_) => Ok(()),
+            Ok(_) => anyhow::Ok(()),
             Err(e) => anyhow::bail!("Error creating file: {}", e),
         };
     }
 }
 
-#[derive(Parser, Debug)]
+fn insert_environment_variables(
+    deploy_config: &DeployConfig,
+    v: &Vec<EnvironmentVariable>,
+) -> HashMap<String, String> {
+    let mut environment: HashMap<String, String> = HashMap::new();
+
+    v.into_iter().for_each(|env_var| match &env_var.value {
+        EnvironmentVariableValue::Value(value) => {
+            environment.insert(String::from(env_var.key.as_str()), value.to_string());
+        }
+        EnvironmentVariableValue::FromGcpKms { value } => block_on(async {
+            let gcp_kms_unwrapped = deploy_config
+                .gcp_kms
+                .as_ref()
+                .expect("gcp_ssm config is not set");
+
+            match gcp_kms::decrypt_ciphertext(
+                gcp_kms::get_cloud_kms().await,
+                gcp_kms_unwrapped.project.as_str(),
+                gcp_kms_unwrapped.location.as_str(),
+                gcp_kms_unwrapped.key_ring.as_str(),
+                gcp_kms_unwrapped.key.as_str(),
+                value.as_str(),
+            )
+            .await
+            {
+                Ok(decrypted_value) => {
+                    environment.insert(String::from(env_var.key.as_str()), decrypted_value);
+                }
+                Err(e) => {
+                    println!("Error decrypting {}: {}", value, e);
+                }
+            }
+        }),
+        EnvironmentVariableValue::FromGcpSsm { name, version } => block_on(async {
+            match gcp_ssm::access_secret_version(
+                gcp_ssm::get_secret_manager().await,
+                deploy_config
+                    .gcp_ssm
+                    .as_ref()
+                    .expect("gcp_ssm config is not set")
+                    .project
+                    .as_str(),
+                name.as_str(),
+                *version,
+            )
+            .await
+            {
+                Ok(secret_value) => {
+                    environment.insert(String::from(env_var.key.as_str()), secret_value);
+                }
+                Err(e) => {
+                    println!("Error accessing {}/{}: {}", name, version, e);
+                }
+            }
+        }),
+    });
+
+    environment
+}
+
+#[derive(Clone, Parser, Debug)]
 pub struct FlyConfigSchemaOptions {
     /// The name of the JSON config file
     #[clap(long, short)]
@@ -444,7 +484,7 @@ impl super::CommandRunner for FlyConfigSchemaOptions {
     }
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Clone, Subcommand, Debug)]
 pub enum FlyConfigSubcommand {
     /// Generates a new fly config file
     New(FlyConfigNewOptions),
