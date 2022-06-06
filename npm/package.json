@@ -18,8 +18,11 @@
         "tsconfig"
     ],
     "scripts": {
-        "postinstall": "node --experimental-modules ./postinstall.js",
-        "prettier": "prettier --ignore-unknown --no-error-on-unmatched-pattern --check .",
+        "check": "npm run eslint && npm run prettier && npm run test",
+        "eslint": "eslint --ignore-path .gitignore './**/*.{ts,js,cjs,json}'",
+        "eslint:fix": "npm run eslint -- --fix",
+        "postinstall": "node ./postinstall.mjs",
+        "prettier": "prettier --ignore-path .gitignore --ignore-unknown --no-error-on-unmatched-pattern --check .",
         "prettier:fix": "npm run prettier -- --write",
         "test": "jest ."
     },
@@ -27,6 +30,8 @@
         "@swc/core": "^1.2.197",
         "@swc/jest": "^0.2.21",
         "@tsconfig/node16": "^1.0.2",
+        "eslint": "^8.17.0",
+        "eslint-config-get-off-my-lawn": "^7.1.0",
         "jest": "^28.1.0",
         "prettier": "2.6.2",
         "prettier-config-get-off-my-lawn": "1.0.0",
@@ -51,6 +56,9 @@
         "jest": {
             "optional": true
         }
+    },
+    "engines": {
+        "node": "16.x"
     },
     "publishConfig": {
         "access": "public",

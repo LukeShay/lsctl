@@ -2,6 +2,16 @@
 
 set -e
 
+echo "Running acceptance tests"
+
+cd npm
+
+npm ci --no-progress
+
+cargo run -- js config
+
+npm run check
+
 current_version="$(./scripts/current_version.sh)"
 
 git tag "v${current_version}"
