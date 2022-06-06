@@ -27,12 +27,12 @@
         "test": "jest ."
     },
     "devDependencies": {
-        "@swc/core": "^1.2.197",
-        "@swc/jest": "^0.2.21",
-        "@tsconfig/node16": "^1.0.2",
-        "eslint": "^8.17.0",
-        "eslint-config-get-off-my-lawn": "^7.1.0",
-        "jest": "^28.1.0",
+        "@swc/core": "1.2.197",
+        "@swc/jest": "0.2.21",
+        "@tsconfig/node16": "1.0.2",
+        "eslint": "8.17.0",
+        "eslint-config-get-off-my-lawn": "7.1.0",
+        "jest": "28.1.0",
         "prettier": "2.6.2",
         "prettier-config-get-off-my-lawn": "1.0.0",
         "prettier-plugin-packagejson": "2.2.18"
