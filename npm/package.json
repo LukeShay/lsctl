@@ -1,24 +1,42 @@
 {
-  "name": "lsctl",
-  "version": "0.0.2-RC.7",
-  "description": "CLI to help simplify my workflows",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/",
-    "tag": "latest"
-  },
-  "type": "module",
-  "scripts": {
-    "postinstall": "node --experimental-modules ./postinstall.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lukeshay/lsctl.git"
-  },
-  "author": "Luke Shay <https://github.com/lukeshay>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/lukeshay/lsctl/issues"
-  },
-  "homepage": "https://github.com/lukeshay/lsctl#readme"
+    "name": "lsctl",
+    "version": "0.0.2-RC.7",
+    "description": "CLI to help simplify my workflows",
+    "homepage": "https://github.com/lukeshay/lsctl#readme",
+    "bugs": {
+        "url": "https://github.com/lukeshay/lsctl/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lukeshay/lsctl.git"
+    },
+    "license": "MIT",
+    "author": "Luke Shay <https://github.com/lukeshay>",
+    "type": "module",
+    "bin": "./bin/lsctl",
+    "files": [
+        "jest-preset.js",
+        "tsconfig"
+    ],
+    "scripts": {
+        "postinstall": "node --experimental-modules ./postinstall.js",
+        "prettier": "prettier --ignore-unknown --no-error-on-unmatched-pattern --check .",
+        "prettier:fix": "npm run prettier -- --write"
+    },
+    "dependencies": {
+        "@swc/core": "^1.2.197",
+        "@swc/jest": "^0.2.21",
+        "@tsconfig/node16": "^1.0.2",
+        "jest": "^28.1.0"
+    },
+    "devDependencies": {
+        "prettier": "2.6.2",
+        "prettier-config-get-off-my-lawn": "1.0.0",
+        "prettier-plugin-packagejson": "2.2.18"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/",
+        "tag": "latest"
+    }
 }

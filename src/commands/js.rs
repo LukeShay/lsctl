@@ -5,8 +5,10 @@ use glob::glob;
 use path_absolutize::Absolutize;
 use rayon::prelude::*;
 use relative_path::RelativePath;
+use serde::{Deserialize, Serialize};
 /// Ripped off from https://github.com/swc-project/swc/blob/main/crates/swc_cli/src/commands/compile.rs
 use std::{
+    collections::HashMap,
     fs::{self, File},
     io::{self, BufRead, Write},
     path::{Path, PathBuf},
@@ -20,6 +22,8 @@ use swc_common::{
     errors::ColorConfig, sync::Lazy, FileName, FilePathMapping, SourceFile, SourceMap,
 };
 use walkdir::WalkDir;
+
+use crate::utils::file_utils;
 
 /// Configuration option for transform files.
 #[derive(Parser, Debug)]
@@ -409,8 +413,107 @@ impl super::CommandRunner for JsBuildOptions {
     }
 }
 
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize)]
+struct PackageJson {
+    #[serde(rename(serialize = "type", deserialize = "type"))]
+    the_type: Option<String>,
+    dependencies: Option<HashMap<String, String>>,
+}
+
+impl PackageJson {
+    fn new() -> anyhow::Result<Self> {
+        match fs::read_to_string("./package.json") {
+            Ok(contents) => match serde_json::from_str(&contents) {
+                Ok(package_json) => Ok(package_json),
+                Err(e) => anyhow::bail!("Failed to parse package.json: {}", e),
+            },
+            Err(e) => anyhow::bail!("Failed to read package.json: {}", e),
+        }
+    }
+
+    fn has_dependency(&self, name: &str) -> bool {
+        self.dependencies.is_some() && self.dependencies.as_ref().unwrap().contains_key(name)
+    }
+
+    fn is_esm(&self) -> bool {
+        self.the_type.is_some() && self.the_type.as_ref().unwrap() == "module"
+    }
+}
+
+#[derive(Parser, Debug)]
+pub struct JsSwcConfigOptions {}
+
+#[async_trait]
+impl super::CommandRunner for JsSwcConfigOptions {
+    async fn execute(&self) -> anyhow::Result<()> {
+        let package_json = PackageJson::new().unwrap();
+        let syntax = if package_json.has_dependency("typescript") {
+            "typescript"
+        } else {
+            "ecmascript"
+        };
+
+        let (target, the_type) = if package_json.is_esm() {
+            ("es2020", "es6")
+        } else {
+            ("es5", "commonjs")
+        };
+
+        let swc_config = format!(
+            r#"{{
+    "jsc": {{
+        "parser": {{
+            "syntax": "{}"
+        }},
+        "target": "{}"
+    }},
+    "minify": true,
+    "module": {{
+        "strict": true,
+        "strictMode": true,
+        "type": "{}"
+    }},
+    "sourceMaps": "inline"
+}}"#,
+            syntax, target, the_type
+        );
+
+        file_utils::create_and_write_file("./.swcrc", swc_config).unwrap();
+
+        anyhow::Ok(())
+    }
+}
+
+#[derive(Parser, Debug)]
+pub struct JsTsConfigOptions {}
+
+#[async_trait]
+impl super::CommandRunner for JsTsConfigOptions {
+    async fn execute(&self) -> anyhow::Result<()> {
+        let package_json = PackageJson::new().unwrap();
+
+        let the_type = if package_json.is_esm() { "esm" } else { "cjs" };
+
+        let tsconfig = format!(
+            r#"{{
+    "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json",
+    "extends": "lsctl/tsconfig/{}-server.json"
+}}"#,
+            the_type
+        );
+
+        file_utils::create_and_write_file("./tsconfig.json", tsconfig).unwrap();
+
+        anyhow::Ok(())
+    }
+}
+
 #[derive(Subcommand, Debug)]
 pub enum JsSubcommand {
     /// Builds the js files using swc
     Build(JsBuildOptions),
+    /// Creates the recommended swc config file based on the package.json
+    SwcConfig(JsSwcConfigOptions),
+    /// Creates the recommended tsconfig file based on the package.json
+    TsConfig(JsTsConfigOptions),
 }

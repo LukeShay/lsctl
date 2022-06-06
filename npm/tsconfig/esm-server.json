@@ -1,0 +1,13 @@
+{
+    "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json",
+    "extends": "@tsconfig/node16/tsconfig.json",
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "isolatedModules": true,
+        "lib": ["ES2020"],
+        "module": "ES2020",
+        "moduleResolution": "Node",
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
+    }
+}
