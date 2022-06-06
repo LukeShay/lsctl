@@ -1,0 +1,15 @@
+{
+    "jsc": {
+        "parser": {
+            "syntax": "ecmascript"
+        },
+        "target": "es5"
+    },
+    "minify": true,
+    "module": {
+        "strict": true,
+        "strictMode": true,
+        "type": "commonjs"
+    },
+    "sourceMaps": "inline"
+}

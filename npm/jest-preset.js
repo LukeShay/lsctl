@@ -4,9 +4,10 @@ module.exports = {
     collectCoverage: true,
     coverageDirectory: '.jest-coverage',
     coverageReporters: ['html', 'lcov', 'text', 'cobertura'],
+    roots: ['<rootDir>'],
     testEnvironment: 'node',
-    testMatch: ['**/*.{spec,test}.{t,j}sx?'],
+    testMatch: ['**/*.{spec,test}.{ts,tsx,js,jsx}'],
     transform: {
-        '^.+\\.(t|j)s$': '@swc/jest',
+        '^.+\\.(t|j)sx?$': '@swc/jest',
     },
 };

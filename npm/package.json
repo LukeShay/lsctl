@@ -12,7 +12,6 @@
     },
     "license": "MIT",
     "author": "Luke Shay <https://github.com/lukeshay>",
-    "type": "module",
     "bin": "./bin/lsctl",
     "files": [
         "jest-preset.js",
@@ -21,7 +20,8 @@
     "scripts": {
         "postinstall": "node --experimental-modules ./postinstall.js",
         "prettier": "prettier --ignore-unknown --no-error-on-unmatched-pattern --check .",
-        "prettier:fix": "npm run prettier -- --write"
+        "prettier:fix": "npm run prettier -- --write",
+        "test": "jest ."
     },
     "devDependencies": {
         "@swc/core": "^1.2.197",
