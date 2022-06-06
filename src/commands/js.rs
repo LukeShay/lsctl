@@ -414,10 +414,16 @@ impl super::CommandRunner for JsBuildOptions {
 }
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize)]
+#[serde(rename_all(deserialize = "camelCase", serialize = "camelCase"))]
 struct PackageJson {
     #[serde(rename(serialize = "type", deserialize = "type"))]
     the_type: Option<String>,
     dependencies: Option<HashMap<String, String>>,
+    dev_dependencies: Option<HashMap<String, String>>,
+}
+
+fn has_key(map: &Option<HashMap<String, String>>, key: &str) -> bool {
+    map.is_some() && map.as_ref().unwrap().contains_key(key)
 }
 
 impl PackageJson {
@@ -432,7 +438,7 @@ impl PackageJson {
     }
 
     fn has_dependency(&self, name: &str) -> bool {
-        self.dependencies.is_some() && self.dependencies.as_ref().unwrap().contains_key(name)
+        has_key(&self.dependencies, name) || has_key(&self.dev_dependencies, name)
     }
 
     fn is_esm(&self) -> bool {
@@ -441,19 +447,40 @@ impl PackageJson {
 }
 
 #[derive(Parser, Debug)]
-pub struct JsSwcConfigOptions {}
+pub struct JsConfigOptions {}
 
 #[async_trait]
-impl super::CommandRunner for JsSwcConfigOptions {
+impl super::CommandRunner for JsConfigOptions {
     async fn execute(&self) -> anyhow::Result<()> {
         let package_json = PackageJson::new().unwrap();
-        let syntax = if package_json.has_dependency("typescript") {
+
+        let is_esm = package_json.is_esm();
+        let is_typescript = package_json.has_dependency("typescript");
+
+        println!("This repo appears to be using {}. If this is incorrect, please set \"type\": \"{}\" in package.json.", if is_esm { "ES Modules" } else { "Common JS" }, if is_esm { "commonjs" } else { "module" });
+        println!(
+            "This repo {} to be using TypeScript. If this is incorrect, please {} the \"typescript\" dependency in package.json.",
+            if is_typescript {
+                "appears"
+            } else {
+                "does not appear"
+            },
+            if is_typescript {
+                "remove"
+            } else {
+                "add"
+            }
+        );
+
+        println!("\nCreating a SWC config");
+
+        let syntax = if is_typescript {
             "typescript"
         } else {
             "ecmascript"
         };
 
-        let (target, the_type) = if package_json.is_esm() {
+        let (target, the_type) = if is_esm {
             ("es2020", "es6")
         } else {
             ("es5", "commonjs")
@@ -480,29 +507,19 @@ impl super::CommandRunner for JsSwcConfigOptions {
 
         file_utils::create_and_write_file("./.swcrc", swc_config).unwrap();
 
-        anyhow::Ok(())
-    }
-}
+        if is_typescript {
+            println!("Creating a TSConfig");
 
-#[derive(Parser, Debug)]
-pub struct JsTsConfigOptions {}
-
-#[async_trait]
-impl super::CommandRunner for JsTsConfigOptions {
-    async fn execute(&self) -> anyhow::Result<()> {
-        let package_json = PackageJson::new().unwrap();
-
-        let the_type = if package_json.is_esm() { "esm" } else { "cjs" };
-
-        let tsconfig = format!(
-            r#"{{
+            let tsconfig = format!(
+                r#"{{
     "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json",
     "extends": "lsctl/tsconfig/{}-server.json"
 }}"#,
-            the_type
-        );
+                if is_esm { "esm" } else { "cjs" }
+            );
 
-        file_utils::create_and_write_file("./tsconfig.json", tsconfig).unwrap();
+            file_utils::create_and_write_file("./tsconfig.json", tsconfig).unwrap();
+        }
 
         anyhow::Ok(())
     }
@@ -512,8 +529,6 @@ impl super::CommandRunner for JsTsConfigOptions {
 pub enum JsSubcommand {
     /// Builds the js files using swc
     Build(JsBuildOptions),
-    /// Creates the recommended swc config file based on the package.json
-    SwcConfig(JsSwcConfigOptions),
-    /// Creates the recommended tsconfig file based on the package.json
-    TsConfig(JsTsConfigOptions),
+    /// Creates the recommended swc config and tsconfig file based on the package.json
+    Config(JsConfigOptions),
 }

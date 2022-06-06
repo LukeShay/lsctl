@@ -19,7 +19,6 @@ async fn main() -> anyhow::Result<()> {
             options.execute().await
         }
         Command::Js(JsSubcommand::Build(options)) => options.execute().await,
-        Command::Js(JsSubcommand::SwcConfig(options)) => options.execute().await,
-        Command::Js(JsSubcommand::TsConfig(options)) => options.execute().await,
+        Command::Js(JsSubcommand::Config(options)) => options.execute().await,
     }
 }
