@@ -31,3 +31,9 @@ dependencies = [
   "fmt-check",
   "clippy"
 ]
+
+[tasks.version]
+script = "./scripts/version.sh ${@}"
+
+[tasks.tag]
+script = "./scripts/tag.sh ${@}"
