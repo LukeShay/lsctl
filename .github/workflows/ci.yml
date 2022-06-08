@@ -53,7 +53,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/cargo@v1
-      - uses: Swatinem/rust-cache@v1
+      - name: Configure sccache
+        uses: visvirial/sccache-action@v1
+        with:
+          arch: ${{ matrix.TARGET }}
       - name: Install cross
         run: cargo install cross --force
       - name: Run build
@@ -134,6 +137,10 @@ jobs:
             target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v2
+      - name: Configure sccache
+        uses: visvirial/sccache-action@v1
+        with:
+          arch: ${{ matrix.target }}
       - name: Query version number
         id: get_version
         shell: bash
