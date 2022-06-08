@@ -6,7 +6,7 @@ echo "Running acceptance tests"
 
 cd npm
 
-npm ci --no-progress
+npm ci --no-progress --ignore-scripts
 
 cargo run -- js config
 

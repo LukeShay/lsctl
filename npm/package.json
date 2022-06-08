@@ -22,7 +22,7 @@
         "eslint": "eslint --ignore-path .gitignore './**/*.{ts,js,cjs,json}'",
         "eslint:fix": "npm run eslint -- --fix",
         "postinstall": "node ./postinstall.mjs",
-        "prettier": "prettier --ignore-path .gitignore --ignore-unknown --no-error-on-unmatched-pattern --check .",
+        "prettier": "prettier --ignore-unknown --no-error-on-unmatched-pattern --check .",
         "prettier:fix": "npm run prettier -- --write",
         "test": "jest ."
     },

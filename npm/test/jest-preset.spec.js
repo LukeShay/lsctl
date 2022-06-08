@@ -2,7 +2,7 @@ describe('jest-preset', () => {
     let jestPreset;
 
     beforeEach(async () => {
-        jestPreset = await import('../jest-preset.js');
+        jestPreset = await import('../jest-preset');
     });
 
     test('should match snapshot', () => {
