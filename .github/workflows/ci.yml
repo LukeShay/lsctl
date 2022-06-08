@@ -54,10 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/cargo@v1
-      - name: Configure sccache
-        uses: visvirial/sccache-action@v1
-        with:
-          arch: ${{ matrix.TARGET }}
+      - uses: Swatinem/rust-cache@v1
       - name: Install cross
         run: cargo install cross --force
       - name: Run build
