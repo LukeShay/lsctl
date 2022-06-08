@@ -12,13 +12,13 @@ use google_cloudkms1::{
 };
 use hyper::client::HttpConnector;
 use hyper_rustls::HttpsConnector;
-use std::{default::Default, path::Path};
+use std::{default::Default, path::Path, env};
 
 async fn get_authenticator() -> Authenticator<HttpsConnector<HttpConnector>> {
     match read_authorized_user_secret(Path::new(
         format!(
             "{}/.config/gcloud/application_default_credentials.json",
-            env!("HOME")
+            env::var("HOME").unwrap()
         )
         .as_str(),
     ))
