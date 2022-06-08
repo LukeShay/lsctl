@@ -130,17 +130,15 @@ jobs:
           - os: macos-latest
             rust: stable
             target: x86_64-apple-darwin
-          - os: windows-latest
+          - os: macos-latest
             rust: stable
             target: aarch64-apple-darwin
+          - os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-msvc
     steps:
       - uses: actions/checkout@v2
-      - name: Query version number
-        id: get_version
-        shell: bash
-        run: |
-          echo "using version tag ${GITHUB_REF:10}"
-          echo ::set-output name=version::"${GITHUB_REF:10}"
+      - uses: Swatinem/rust-cache@v1
       - name: Install Rust
         if: matrix.rust
         run: |
@@ -151,14 +149,11 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install musl-tools -y
-      - name: Build (Linux)
+      - name: Build (Unix)
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: |
           rustup target add ${{ matrix.target }}
           cargo build --release --target ${{ matrix.target }}
-      - name: Build (MacOS)
-        if: matrix.os == 'macos-latest'
-        run: cargo build --release
       - name: Build (Windows)
         if: matrix.os == 'windows-latest'
         run: cargo build --release
