@@ -7,11 +7,6 @@ command = "cargo"
 args = ["build", "--release"]
 dependencies = ["clean"]
 
-[tasks.test]
-command = "cargo"
-args = ["test", "--verbose"]
-dependencies = ["clean"]
-
 [tasks.clippy]
 command = "cargo"
 args = ["clippy", "--all", "--all-targets", "--all-features", "--verbose"]
@@ -27,13 +22,36 @@ args = ["fmt", "--check", "--verbose"]
 [tasks.check]
 dependencies = [
   "build",
-  "test",
+  "test-ci",
   "fmt-check",
   "clippy"
 ]
 
 [tasks.version]
+dependencies = ["test-ci"]
 script = "./scripts/version.sh ${@}"
 
 [tasks.tag]
+dependencies = ["test-ci"]
 script = "./scripts/tag.sh ${@}"
+
+[tasks.test-rs]
+command = "cargo"
+args = ["test", "--verbose"]
+
+[tasks.test-js]
+script_runner = "@shell"
+script = '''
+cd npm
+
+npm ci --no-progress --ignore-scripts
+
+cargo run -- js config
+
+npm run eslint
+npm run prettier
+npm run test -- --ci
+'''
+
+[tasks.test-ci]
+dependencies = ["clean", "test-rs", "test-js"]
