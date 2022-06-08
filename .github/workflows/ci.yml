@@ -135,10 +135,6 @@ jobs:
             target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v2
-      - name: Configure sccache
-        uses: visvirial/sccache-action@v1
-        with:
-          arch: ${{ matrix.target }}
       - name: Query version number
         id: get_version
         shell: bash
