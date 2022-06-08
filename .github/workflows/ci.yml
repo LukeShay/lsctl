@@ -114,3 +114,73 @@ jobs:
           npm publish
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  build-v2:
+    runs-on: ${{ matrix.target }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-musl
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            rust: stable
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            rust: stable
+            target: aarch64-apple-darwin
+    steps:
+      - uses: actions/checkout@v2
+      - name: Query version number
+        id: get_version
+        shell: bash
+        run: |
+          echo "using version tag ${GITHUB_REF:10}"
+          echo ::set-output name=version::"${GITHUB_REF:10}"
+      - name: Install Rust
+        if: matrix.rust
+        run: |
+          rustup update ${{ matrix.rust }} --no-self-update
+          rustup default ${{ matrix.rust }}
+      - name: Install musl-tools (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install musl-tools -y
+      - name: Build (Linux)
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: |
+          rustup target add ${{ matrix.target }}
+          cargo build --release --target ${{ matrix.target }}
+      - name: Build (MacOS)
+        if: matrix.os == 'macos-latest'
+        run: cargo build --release
+      - name: Build (Windows)
+        if: matrix.os == 'windows-latest'
+        run: cargo build --release
+        env:
+          RUSTFLAGS: -Ctarget-feature=+crt-static
+      - name: Create tarball (Unix)
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: |
+          mkdir -p ./artifacts-v2
+
+          zip -jr9 ./artifacts-v2/lsctl-${{ matrix.target }}.zip ./target/${{ matrix.target }}/release/lsctl
+      - name: Create tarball (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          New-Item -Path artifacts -ItemType directory
+
+          Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ matrix.target }}/release/lsctl.exe -DestinationPath artifacts/lsctl-${{ matrix.target }}.zip
+      - name: List release files
+        if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
+        run: find ./artifacts-v2/
+      - name: Archive artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: result
+          path: |
+            ./artifacts-v2
