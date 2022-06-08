@@ -1,6 +1,6 @@
 {
     "name": "lsctl",
-    "version": "0.0.2-RC.8",
+    "version": "0.0.2-RC.9",
     "description": "CLI to help simplify my workflows",
     "homepage": "https://github.com/lukeshay/lsctl#readme",
     "bugs": {
@@ -15,7 +15,8 @@
     "bin": "./bin/lsctl",
     "files": [
         "jest-preset.js",
-        "tsconfig"
+        "tsconfig",
+        "postinstall.mjs"
     ],
     "scripts": {
         "check": "npm run eslint && npm run prettier && npm run test",
