@@ -12,7 +12,7 @@ use google_cloudkms1::{
 };
 use hyper::client::HttpConnector;
 use hyper_rustls::HttpsConnector;
-use std::{default::Default, path::Path, env};
+use std::{default::Default, env, path::Path};
 
 async fn get_authenticator() -> Authenticator<HttpsConnector<HttpConnector>> {
     match read_authorized_user_secret(Path::new(

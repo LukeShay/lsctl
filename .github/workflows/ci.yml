@@ -170,7 +170,7 @@ jobs:
         run: |
           New-Item -Path artifacts -ItemType directory
 
-          Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ matrix.target }}/release/lsctl.exe -DestinationPath artifacts/lsctl-${{ matrix.target }}.zip
+          Compress-Archive -CompressionLevel Optimal -Force -Path target/release/lsctl.exe -DestinationPath artifacts/lsctl-${{ matrix.target }}.zip
       - name: List release files
         if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
         run: find ./artifacts-v2/
