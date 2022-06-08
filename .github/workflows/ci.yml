@@ -117,7 +117,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   build-v2:
-    runs-on: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
