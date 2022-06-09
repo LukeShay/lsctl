@@ -18,7 +18,6 @@ async fn main() -> anyhow::Result<()> {
         Command::Fly(FlySubcommand::Config(FlyConfigSubcommand::Schema(options))) => {
             options.execute().await
         }
-        Command::Js(JsSubcommand::Build(options)) => options.execute().await,
         Command::Js(JsSubcommand::Config(options)) => options.execute().await,
     }
 }
