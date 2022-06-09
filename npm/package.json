@@ -1,6 +1,6 @@
 {
     "name": "lsctl",
-    "version": "0.0.2-RC.9",
+    "version": "0.0.2-RC.10",
     "description": "CLI to help simplify my workflows",
     "homepage": "https://github.com/lukeshay/lsctl#readme",
     "bugs": {
