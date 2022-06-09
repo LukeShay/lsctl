@@ -172,7 +172,7 @@ jobs:
 
           Compress-Archive -CompressionLevel Optimal -Force -Path target/release/lsctl.exe -DestinationPath artifacts-v2/lsctl-${{ matrix.target }}.zip
       - name: List release files
-        if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
+        shell: bash
         run: find ./artifacts-v2/
       - name: Archive artifact
         uses: actions/upload-artifact@v2
