@@ -38,78 +38,6 @@ jobs:
       - run: cargo clippy --all-targets --all-features --verbose
 
   build:
-    if: true == false
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - TARGET: x86_64-unknown-linux-gnu
-            OS: ubuntu-latest
-          - TARGET: x86_64-unknown-linux-musl
-            OS: ubuntu-latest
-          - TARGET: aarch64-apple-darwin
-            OS: macos-latest
-          - TARGET: x86_64-apple-darwin
-            OS: macos-latest
-          # - TARGET: x86_64-pc-windows-msvc
-          #   OS: windows-latest
-    runs-on: ${{ matrix.OS }}
-    steps:
-      - uses: styfle/cancel-workflow-action@0.9.1
-      - uses: actions/checkout@v2
-      - uses: actions-rs/cargo@v1
-      - uses: Swatinem/rust-cache@v1
-      - run: cargo install cross --force
-      - run: cross build --release --verbose --target ${{ matrix.TARGET }}
-      - if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
-        run: |
-          mkdir -p ./artifacts
-
-          zip -jr9 ./artifacts/lsctl-${{ matrix.TARGET }}.zip ./target/${{ matrix.TARGET }}/release/lsctl
-      - if: startsWith(matrix.OS, 'windows')
-        run: |
-          New-Item -Path artifacts -ItemType directory
-
-          Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ matrix.TARGET }}/release/lsctl.exe -DestinationPath artifacts/lsctl-${{ matrix.TARGET }}.zip
-      - if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
-        run: find ./artifacts/
-      - uses: actions/upload-artifact@v2
-        with:
-          name: result
-          path: |
-            ./artifacts
-
-  release:
-    needs: [test, format, clippy, build]
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: styfle/cancel-workflow-action@0.9.1
-      - uses: actions/checkout@v1
-      - uses: actions/download-artifact@v2
-        with:
-          name: result
-          path: ./artifacts
-      - run: find ./artifacts/
-      - id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      - uses: softprops/action-gh-release@v1
-        with:
-          name: ${{ steps.get_version.outputs.VERSION }}
-          tag_name: ${{ github.ref }}
-          draft: false
-          generate_release_notes: true
-          files: ./artifacts/*.zip
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
-          cd npm
-          npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
-          npm publish
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  build-v2:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -151,18 +79,48 @@ jobs:
           RUSTFLAGS: -Ctarget-feature=+crt-static
       - if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: |
-          mkdir -p ./artifacts-v2
+          mkdir -p ./artifacts
 
-          zip -jr9 ./artifacts-v2/lsctl-${{ matrix.target }}.zip ./target/${{ matrix.target }}/release/lsctl
+          zip -jr9 ./artifacts/lsctl-${{ matrix.target }}.zip ./target/${{ matrix.target }}/release/lsctl
       - if: matrix.os == 'windows-latest'
         run: |
-          New-Item -Path artifacts-v2 -ItemType directory
+          New-Item -Path artifacts -ItemType directory
 
-          Compress-Archive -CompressionLevel Optimal -Force -Path target/release/lsctl.exe -DestinationPath artifacts-v2/lsctl-${{ matrix.target }}.zip
+          Compress-Archive -CompressionLevel Optimal -Force -Path target/release/lsctl.exe -DestinationPath artifacts/lsctl-${{ matrix.target }}.zip
       - shell: bash
-        run: find ./artifacts-v2/
+        run: find ./artifacts/
       - uses: actions/upload-artifact@v2
         with:
           name: result
           path: |
-            ./artifacts-v2
+            ./artifacts
+
+  release:
+    needs: [test, format, clippy, build]
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
+      - uses: actions/checkout@v1
+      - uses: actions/download-artifact@v2
+        with:
+          name: result
+          path: ./artifacts
+      - run: find ./artifacts/
+      - id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ github.ref }}
+          draft: false
+          generate_release_notes: true
+          files: ./artifacts/*.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          cd npm
+          npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
+          npm publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
