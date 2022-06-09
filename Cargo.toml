@@ -44,9 +44,9 @@ relative-path = "1.6.1"
 schemars = "0.8.8"
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = { version = "1.0.81", features = ["unbounded_depth"] }
-swc = { version = "0.179.0" }
-swc_common = { version = "0.18.0" }
-swc_plugin_runner = { version = "0.55.0", default-features = false, optional = true }
+swc = { version = "0.186.0" }
+swc_common = { version = "0.18.8" }
+swc_plugin_runner = { version = "0.56.0", default-features = false, optional = true }
 tokio = { version = "1.18.2", features = ["full"] }
 toml = "0.5.9"
 walkdir = "2"
