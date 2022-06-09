@@ -168,9 +168,9 @@ jobs:
       - name: Create tarball (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          New-Item -Path artifacts -ItemType directory
+          New-Item -Path artifacts-v2 -ItemType directory
 
-          Compress-Archive -CompressionLevel Optimal -Force -Path target/release/lsctl.exe -DestinationPath artifacts/lsctl-${{ matrix.target }}.zip
+          Compress-Archive -CompressionLevel Optimal -Force -Path target/release/lsctl.exe -DestinationPath artifacts-v2/lsctl-${{ matrix.target }}.zip
       - name: List release files
         if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
         run: find ./artifacts-v2/
