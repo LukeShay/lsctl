@@ -12,6 +12,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v2
       - uses: actions-rs/cargo@v1
       - uses: Swatinem/rust-cache@v1
@@ -21,6 +22,7 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v2
       - uses: actions-rs/cargo@v1
       - uses: Swatinem/rust-cache@v1
@@ -29,6 +31,7 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v2
       - uses: actions-rs/cargo@v1
       - uses: Swatinem/rust-cache@v1
@@ -52,30 +55,25 @@ jobs:
           #   OS: windows-latest
     runs-on: ${{ matrix.OS }}
     steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v2
       - uses: actions-rs/cargo@v1
       - uses: Swatinem/rust-cache@v1
-      - name: Install cross
-        run: cargo install cross --force
-      - name: Run build
-        run: cross build --release --verbose --target ${{ matrix.TARGET }}
-      - name: Compress (unix)
-        if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
+      - run: cargo install cross --force
+      - run: cross build --release --verbose --target ${{ matrix.TARGET }}
+      - if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
         run: |
           mkdir -p ./artifacts
 
           zip -jr9 ./artifacts/lsctl-${{ matrix.TARGET }}.zip ./target/${{ matrix.TARGET }}/release/lsctl
-      - name: Compress (windows)
-        if: startsWith(matrix.OS, 'windows')
+      - if: startsWith(matrix.OS, 'windows')
         run: |
           New-Item -Path artifacts -ItemType directory
 
           Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ matrix.TARGET }}/release/lsctl.exe -DestinationPath artifacts/lsctl-${{ matrix.TARGET }}.zip
-      - name: List release files
-        if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
+      - if: startsWith(matrix.OS, 'ubuntu') || startsWith(matrix.OS, 'macos')
         run: find ./artifacts/
-      - name: Archive artifact
-        uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2
         with:
           name: result
           path: |
@@ -87,20 +85,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v1
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
+      - uses: styfle/cancel-workflow-action@0.9.1
+      - uses: actions/checkout@v1
+      - uses: actions/download-artifact@v2
         with:
           name: result
           path: ./artifacts
-      - name: List release files
-        run: find ./artifacts/
-      - name: Get the version
-        id: get_version
+      - run: find ./artifacts/
+      - id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      - name: Release
-        uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v1
         with:
           name: ${{ steps.get_version.outputs.VERSION }}
           tag_name: ${{ github.ref }}
@@ -108,8 +102,7 @@ jobs:
           generate_release_notes: true
           files: ./artifacts/*.zip
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: NPM Publish
-        run: |
+      - run: |
           cd npm
           npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
           npm publish
@@ -137,45 +130,38 @@ jobs:
             rust: stable
             target: x86_64-pc-windows-msvc
     steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v2
       - uses: Swatinem/rust-cache@v1
-      - name: Install Rust
-        if: matrix.rust
+      - if: matrix.rust
         run: |
           rustup update ${{ matrix.rust }} --no-self-update
           rustup default ${{ matrix.rust }}
-      - name: Install musl-tools (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      - if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update -y
           sudo apt-get install musl-tools -y
-      - name: Build (Unix)
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+      - if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: |
           rustup target add ${{ matrix.target }}
           cargo build --release --target ${{ matrix.target }}
-      - name: Build (Windows)
-        if: matrix.os == 'windows-latest'
+      - if: matrix.os == 'windows-latest'
         run: cargo build --release
         env:
           RUSTFLAGS: -Ctarget-feature=+crt-static
-      - name: Create tarball (Unix)
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+      - if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: |
           mkdir -p ./artifacts-v2
 
           zip -jr9 ./artifacts-v2/lsctl-${{ matrix.target }}.zip ./target/${{ matrix.target }}/release/lsctl
-      - name: Create tarball (Windows)
-        if: matrix.os == 'windows-latest'
+      - if: matrix.os == 'windows-latest'
         run: |
           New-Item -Path artifacts-v2 -ItemType directory
 
           Compress-Archive -CompressionLevel Optimal -Force -Path target/release/lsctl.exe -DestinationPath artifacts-v2/lsctl-${{ matrix.target }}.zip
-      - name: List release files
-        shell: bash
+      - shell: bash
         run: find ./artifacts-v2/
-      - name: Archive artifact
-        uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2
         with:
           name: result
           path: |
