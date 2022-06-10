@@ -39,7 +39,11 @@ impl PackageJson {
 }
 
 #[derive(Parser, Debug)]
-pub struct JsConfigOptions {}
+pub struct JsConfigOptions {
+    /// Skips installing dependencies
+    #[clap(short, long)]
+    skip_dependencies: bool,
+}
 
 #[async_trait]
 impl super::CommandRunner for JsConfigOptions {
@@ -72,34 +76,36 @@ impl super::CommandRunner for JsConfigOptions {
             "npm"
         };
 
-        println!("Install dependencies using {}", package_manager);
+        if !self.skip_dependencies {
+            println!("Install dependencies using {}", package_manager);
 
-        let mut dependencies = vec![
-            "@swc/core@latest",
-            "@swc/jest@latest",
-            "@swc/cli@latest",
-            "prettier@latest",
-            "prettier-config-get-off-my-lawn@latest",
-            "eslint@latest",
-            "eslint-config-get-off-my-lawn@latest",
-            "jest@latest",
-            "chance@latest",
-            "nodemon@latest",
-        ];
+            let mut dependencies = vec![
+                "@swc/core@latest",
+                "@swc/jest@latest",
+                "@swc/cli@latest",
+                "prettier@latest",
+                "prettier-config-get-off-my-lawn@latest",
+                "eslint@latest",
+                "eslint-config-get-off-my-lawn@latest",
+                "jest@latest",
+                "chance@latest",
+                "nodemon@latest",
+            ];
 
-        if is_typescript {
-            dependencies.push("typescript@latest");
-            dependencies.push("@types/node16@latest");
-            dependencies.push("@types/jest@latest");
-            dependencies.push("@types/chance@latest");
+            if is_typescript {
+                dependencies.push("typescript@latest");
+                dependencies.push("@types/node16@latest");
+                dependencies.push("@types/jest@latest");
+                dependencies.push("@types/chance@latest");
+            }
+
+            Command::new(package_manager)
+                .arg("install")
+                .arg("-D")
+                .args(dependencies)
+                .output()
+                .unwrap();
         }
-
-        Command::new(package_manager)
-            .arg("install")
-            .arg("-D")
-            .args(dependencies)
-            .output()
-            .unwrap();
 
         println!("Creating a SWC config");
 
