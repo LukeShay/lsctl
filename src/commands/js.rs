@@ -1,8 +1,7 @@
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs;
+use std::{collections::HashMap, fs, process::Command};
 
 use crate::utils::file_utils;
 
@@ -65,7 +64,44 @@ impl super::CommandRunner for JsConfigOptions {
             }
         );
 
-        println!("\nCreating a SWC config");
+        let package_manager = if file_utils::does_file_exist("./yarn.lock") {
+            "yarn"
+        } else if file_utils::does_file_exist("./pnpm-lock.yaml") {
+            "pnpm"
+        } else {
+            "npm"
+        };
+
+        println!("Install dependencies using {}", package_manager);
+
+        let mut dependencies = vec![
+            "@swc/core@latest",
+            "@swc/jest@latest",
+            "@swc/cli@latest",
+            "prettier@latest",
+            "prettier-config-get-off-my-lawn@latest",
+            "eslint@latest",
+            "eslint-config-get-off-my-lawn@latest",
+            "jest@latest",
+            "chance@latest",
+            "nodemon@latest",
+        ];
+
+        if is_typescript {
+            dependencies.push("typescript@latest");
+            dependencies.push("@types/node16@latest");
+            dependencies.push("@types/jest@latest");
+            dependencies.push("@types/chance@latest");
+        }
+
+        Command::new(package_manager)
+            .arg("install")
+            .arg("-D")
+            .args(dependencies)
+            .output()
+            .unwrap();
+
+        println!("Creating a SWC config");
 
         let syntax = if is_typescript {
             "typescript"
