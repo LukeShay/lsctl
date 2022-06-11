@@ -1,6 +1,6 @@
 {
     "name": "lsctl",
-    "version": "0.0.2-RC.11",
+    "version": "0.0.2-RC.12",
     "description": "CLI to help simplify my workflows",
     "homepage": "https://github.com/lukeshay/lsctl#readme",
     "bugs": {
@@ -29,7 +29,7 @@
     },
     "devDependencies": {
         "@swc/cli": "^0.1.57",
-        "@swc/core": "^1.2.197",
+        "@swc/core": "^1.2.198",
         "@swc/jest": "^0.2.21",
         "@tsconfig/node16": "1.0.2",
         "chance": "^1.1.8",

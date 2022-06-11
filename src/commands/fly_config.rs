@@ -45,8 +45,7 @@ enum EnvironmentVariableValue {
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyConfig {
-    name: String,
-    organization: String,
+    app: String,
     kill_signal: Option<FlyKillSignal>,
     kill_timeout: Option<u64>,
     build: Option<FlyBuild>,
@@ -377,8 +376,7 @@ impl super::CommandRunner for FlyConfigGenOptions {
         }
 
         let fly_config = FlyConfig {
-            name: deploy_config.name,
-            organization: deploy_config.organization,
+            app: deploy_config.name,
             build: deploy_config.build,
             deploy: deploy_config.deploy,
             kill_signal: deploy_config.kill_signal,
