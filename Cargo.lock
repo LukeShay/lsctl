@@ -347,7 +347,7 @@ dependencies = [
 
 [[package]]
 name = "lsctl"
-version = "0.0.2-RC.10"
+version = "0.0.2-RC.11"
 dependencies = [
  "anyhow",
  "async-trait",

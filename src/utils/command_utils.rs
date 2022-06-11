@@ -1,4 +1,4 @@
-use std::{process::Output};
+use std::process::Output;
 
 use anyhow::{bail, Result};
 
