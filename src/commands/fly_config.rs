@@ -103,7 +103,8 @@ struct FlyGcpSsm {
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 struct FlyDatabase {
-    postgres: bool,
+    postgres: Option<bool>,
+    redis: Option<bool>,
 }
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
@@ -269,7 +270,8 @@ impl super::CommandRunner for FlyConfigNewOptions {
             gcp_kms: None,
             gcp_ssm: None,
             database: Some(FlyDatabase {
-                postgres: *database,
+                postgres: Some(*database),
+                redis: None,
             }),
             environment: Some(environment_map),
             // metrics: None,
@@ -413,15 +415,12 @@ fn insert_environment_variables(
                 .expect("gcp_ssm config is not set");
 
             match gcp_kms::decrypt_ciphertext(
-                gcp_kms::get_cloud_kms().await,
                 gcp_kms_unwrapped.project.as_str(),
                 gcp_kms_unwrapped.location.as_str(),
                 gcp_kms_unwrapped.key_ring.as_str(),
                 gcp_kms_unwrapped.key.as_str(),
                 value.as_str(),
-            )
-            .await
-            {
+            ) {
                 Ok(decrypted_value) => {
                     environment.insert(String::from(env_var.key.as_str()), decrypted_value);
                 }
@@ -432,7 +431,6 @@ fn insert_environment_variables(
         }),
         EnvironmentVariableValue::FromGcpSsm { name, version } => block_on(async {
             match gcp_ssm::access_secret_version(
-                gcp_ssm::get_secret_manager().await,
                 deploy_config
                     .gcp_ssm
                     .as_ref()
@@ -441,9 +439,7 @@ fn insert_environment_variables(
                     .as_str(),
                 name.as_str(),
                 *version,
-            )
-            .await
-            {
+            ) {
                 Ok(secret_value) => {
                     environment.insert(String::from(env_var.key.as_str()), secret_value);
                 }

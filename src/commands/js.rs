@@ -90,6 +90,7 @@ impl super::CommandRunner for JsConfigOptions {
                 "jest@latest",
                 "chance@latest",
                 "nodemon@latest",
+                "prettier-plugin-packagejson@latest",
             ];
 
             if is_typescript {
@@ -155,6 +156,37 @@ impl super::CommandRunner for JsConfigOptions {
 
             file_utils::create_and_write_file("./tsconfig.json", tsconfig).unwrap();
         }
+
+        println!("Creating a ESLint config");
+
+        let eslint_config = r#"module.exports = {
+    extends: ['get-off-my-lawn'],
+};
+"#;
+
+        let js_file_ext = if is_esm { "cjs" } else { "js" };
+
+        file_utils::create_and_write_file(
+            format!("./.eslintrc.{}", js_file_ext).as_str(),
+            eslint_config,
+        )
+        .unwrap();
+
+        println!("Creating a Prettier config");
+
+        let eslint_config = r#"module.exports = {
+    ...require('prettier-config-get-off-my-lawn'),
+    plugins: [require('prettier-plugin-packagejson')],
+};
+"#;
+
+        let js_file_ext = if is_esm { "cjs" } else { "js" };
+
+        file_utils::create_and_write_file(
+            format!("./.prettierrc.{}", js_file_ext).as_str(),
+            eslint_config,
+        )
+        .unwrap();
 
         anyhow::Ok(())
     }

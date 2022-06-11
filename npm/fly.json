@@ -1,0 +1,103 @@
+{
+    "name": "ff-{{ environment }}-graphql-api",
+    "organization": "friendfetcher-{{ environment }}",
+    "gcp_kms": {
+        "project": "friendfetcher-shared",
+        "key_ring": "{{ environment }}",
+        "key": "graphql-api",
+        "location": "us-central1",
+        "version": 1
+    },
+    "gcp_ssm": {
+        "project": "friendfetcher-shared"
+    },
+    "database": {
+        "postgres": true,
+        "redis": true
+    },
+    "kill_signal": null,
+    "kill_timeout": null,
+    "build": null,
+    "deploy": {
+        "strategy": "bluegreen",
+        "release_command": "pnpm run prisma:deploy"
+    },
+    "statics": null,
+    "services": [
+        {
+            "internal_port": 3000,
+            "processes": ["app"],
+            "concurrency": {
+                "hard_limit": 25,
+                "soft_limit": 20,
+                "type": "connections"
+            },
+            "ports": [
+                {
+                    "port": 80,
+                    "force_https": null,
+                    "handlers": ["http"]
+                },
+                {
+                    "port": 443,
+                    "force_https": true,
+                    "handlers": ["tls", "http"]
+                }
+            ],
+            "tcp_checks": null,
+            "http_checks": [
+                {
+                    "interval": 10000,
+                    "grace_period": "5s",
+                    "method": "get",
+                    "path": "/api/health",
+                    "protocol": "http",
+                    "timeout": 2000,
+                    "restart_limit": null,
+                    "tls_skip_verify": null,
+                    "headers": null
+                }
+            ]
+        }
+    ],
+    "mounts": null,
+    "environment": {
+        "all": [
+            {
+                "key": "APOLLO_GRAPH_REF",
+                "value": "graphq-api-{{ environment }}@current"
+            },
+            {
+                "key": "APOLLO_SCHEMA_REPORTING",
+                "value": "false"
+            },
+            {
+                "key": "NODE_ENV",
+                "value": "{{ environment }}"
+            },
+            {
+                "key": "PORT",
+                "value": "3000"
+            },
+            {
+                "key": "NEW_RELIC_APP_NAME",
+                "value": "ff-{{ environment }}-graphql-api"
+            },
+            {
+                "key": "GOOGLE_CREDENTIALS",
+                "from_gcp_ssm": {
+                    "name": "{{ environment }}-graphql-api-google-credentials",
+                    "version": 1
+                }
+            }
+        ],
+        "dev": [
+            {
+                "key": "REDIS_PASSWORD",
+                "from_gcp_kms": {
+                    "value": "CiQAFjmuDgDwEscVULUjrBv6ftY2hL/uJyjzgu6CGd+W9oh+b7ESaQCc/eci9h4sotzsYepvs19TS03exYS9DMkH7hVxtH68gi4kq4Wfz7DVoDs6yz9zZBsLN4GuxlmkvNVUaw8uaCWUDt2rSO2AIIAoDByG+obg2tskbn3JHSALSt6HxNd7Grr6cVhuqz99lw=="
+                }
+            }
+        ]
+    }
+}

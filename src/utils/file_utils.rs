@@ -10,10 +10,13 @@ pub fn create_dir(file_path: &str) -> Result<&str, Box<dyn std::error::Error>> {
     };
 }
 
-pub fn create_and_write_file(
+pub fn create_and_write_file<C>(
     file_path: &str,
-    content: String,
-) -> Result<(), Box<dyn std::error::Error>> {
+    content: C,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    C: AsRef<[u8]>,
+{
     return match create_dir(file_path) {
         Ok(file_path) => match fs::write(file_path, content) {
             Ok(_) => Ok(()),
