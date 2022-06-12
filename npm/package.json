@@ -16,7 +16,8 @@
     "files": [
         "jest-preset.js",
         "tsconfig",
-        "postinstall.mjs"
+        "postinstall.mjs",
+        "schema.json"
     ],
     "scripts": {
         "check": "npm run eslint && npm run prettier && npm run test",
@@ -25,7 +26,8 @@
         "postinstall": "node ./postinstall.mjs",
         "prettier": "prettier --ignore-unknown --no-error-on-unmatched-pattern --check .",
         "prettier:fix": "npm run prettier -- --write",
-        "test": "jest ."
+        "test": "jest .",
+        "prepare": "cargo run -- fly config schema"
     },
     "devDependencies": {
         "@swc/cli": "^0.1.57",
