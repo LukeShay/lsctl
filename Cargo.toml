@@ -6,7 +6,7 @@ include = ["Cargo.toml", "src/**/*.rs"]
 license = "MIT"
 name = "lsctl"
 repository = "https://github.com/lukeshay/lsctl"
-version = "0.0.2-RC.12"
+version = "0.0.2-RC.13"
 
 [[bin]]
 bench = false
@@ -28,9 +28,11 @@ clap = { version = "3.1.18", features = ["cargo", "derive", "wrap_help"] }
 colored = "2.0.0"
 futures = "0.3.21"
 handlebars = "4.3.0"
+regex = "1.5.6"
 relative-path = "1.6.1"
 schemars = "0.8.8"
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = { version = "1.0.81", features = ["unbounded_depth"] }
+spinners = "4.0.0"
 tokio = { version = "1.18.2", features = ["full"] }
 toml = "0.5.9"

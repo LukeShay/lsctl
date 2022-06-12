@@ -2,202 +2,14 @@ use anyhow;
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 use futures::executor::block_on;
-use handlebars::Handlebars;
-use serde_json::json;
 use std::collections::HashMap;
 
-use crate::utils::{file_utils, gcp_kms, gcp_ssm};
+use crate::{
+    models::fly_models::*,
+    utils::{file_utils, gcp_kms, gcp_ssm},
+};
 use colored::*;
-use schemars::{schema_for, JsonSchema};
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct DeployConfig {
-    name: String,
-    organization: String,
-    gcp_kms: Option<FlyGcpKms>,
-    gcp_ssm: Option<FlyGcpSsm>,
-    database: Option<FlyDatabase>,
-    kill_signal: Option<FlyKillSignal>,
-    kill_timeout: Option<u64>,
-    build: Option<FlyBuild>,
-    deploy: Option<FlyDeploy>,
-    statics: Option<Vec<FlyStatic>>,
-    services: Option<Vec<FlyService>>,
-    mounts: Option<Vec<FlyMount>>,
-    environment: Option<HashMap<String, Vec<EnvironmentVariable>>>,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct EnvironmentVariable {
-    key: String,
-    #[serde(flatten)]
-    value: EnvironmentVariableValue,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-#[serde(rename_all(deserialize = "snake_case", serialize = "snake_case"))]
-enum EnvironmentVariableValue {
-    Value(String),
-    FromGcpKms { value: String },
-    FromGcpSsm { name: String, version: u16 },
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyConfig {
-    app: String,
-    kill_signal: Option<FlyKillSignal>,
-    kill_timeout: Option<u64>,
-    build: Option<FlyBuild>,
-    deploy: Option<FlyDeploy>,
-    statics: Option<Vec<FlyStatic>>,
-    services: Option<Vec<FlyService>>,
-    mounts: Option<Vec<FlyMount>>,
-    env: Option<HashMap<String, String>>,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyBuild {
-    builder: Option<String>,
-    image: Option<String>,
-    dockerfile: Option<String>,
-    build_target: Option<String>,
-    buildpacks: Option<Vec<String>>,
-    args: Option<HashMap<String, String>>,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyDeploy {
-    release_command: Option<String>,
-    strategy: Option<FlyDeployStrategy>,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyStatic {
-    guest_path: String,
-    url_prefix: String,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-#[serde(rename_all(deserialize = "camelCase", serialize = "lowercase"))]
-enum FlyDeployStrategy {
-    Canary,
-    Rolling,
-    Bluegreen,
-    Immediate,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyGcpKms {
-    project: String,
-    key_ring: String,
-    key: String,
-    location: String,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyGcpSsm {
-    project: String,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyDatabase {
-    postgres: Option<bool>,
-    redis: Option<bool>,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyService {
-    internal_port: u64,
-    processes: Vec<String>,
-    concurrency: FlyServiceConcurrency,
-    ports: Vec<FlyServicePort>,
-    tcp_checks: Option<Vec<FlyServiceTcpCheck>>,
-    http_checks: Option<Vec<FlyServiceHttpCheck>>,
-    #[serde(skip_serializing)]
-    protocol: Option<FlyServiceProtocol>,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyServiceConcurrency {
-    hard_limit: Option<u64>,
-    soft_limit: Option<u64>,
-    #[serde(rename(serialize = "type", deserialize = "type"))]
-    the_type: String,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-#[serde(rename_all(deserialize = "lowercase", serialize = "lowercase"))]
-enum FlyServiceProtocol {
-    Tcp,
-    Udp,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyServicePort {
-    port: u64,
-    force_https: Option<bool>,
-    handlers: Vec<FlyServicePortHandler>,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-#[serde(rename_all(deserialize = "camelCase", serialize = "lowercase"))]
-enum FlyServicePortHandler {
-    Http,
-    Tls,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyServiceHttpCheck {
-    interval: Option<u64>,
-    grace_period: Option<String>,
-    method: Option<String>,
-    path: Option<String>,
-    protocol: Option<FlyServiceHttpCheckProtocol>,
-    timeout: Option<u64>,
-    restart_limit: Option<u64>,
-    tls_skip_verify: Option<bool>,
-    headers: Option<HashMap<String, String>>,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyServiceTcpCheck {
-    interval: Option<u64>,
-    grace_period: Option<String>,
-    timeout: Option<u64>,
-    restart_limit: Option<u64>,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-#[serde(rename_all(deserialize = "camelCase", serialize = "lowercase"))]
-enum FlyServiceHttpCheckProtocol {
-    Http,
-    Https,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-#[serde(rename_all(deserialize = "camelCase", serialize = "UPPERCASE"))]
-enum FlyKillSignal {
-    SigInt,
-    SigTerm,
-    SigQuit,
-    SigUsr1,
-    SigUsr2,
-    SigKill,
-    SigStop,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyMount {
-    source: String,
-    destination: String,
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-struct FlyExperimental {
-    cmd: Option<Vec<String>>,
-    entrypoint: Option<Vec<String>>,
-}
+use schemars::schema_for;
 
 #[derive(Clone, Parser, Debug)]
 pub struct FlyConfigNewOptions {
@@ -260,6 +72,7 @@ impl super::CommandRunner for FlyConfigNewOptions {
         let config = DeployConfig {
             name: name.to_string(),
             organization: organization.to_string(),
+            default_region: "ord".to_string(),
             build: None,
             deploy: None,
             kill_signal: None,
@@ -269,8 +82,15 @@ impl super::CommandRunner for FlyConfigNewOptions {
             gcp_kms: None,
             gcp_ssm: None,
             database: Some(FlyDatabase {
-                postgres: Some(*database),
-                redis: None,
+                postgres: if *database {
+                    Some(FlyDatabasePostgres {
+                        cluster_size: 2,
+                        vm_size: "shared-cpu-1x - 256".to_string(),
+                        volume_size: 1,
+                    })
+                } else {
+                    None
+                },
             }),
             environment: Some(environment_map),
             // metrics: None,
@@ -345,16 +165,7 @@ impl super::CommandRunner for FlyConfigGenOptions {
         println!("    {} {}", "input file".bold(), input_file);
         println!("    {} {}", "output file".bold(), output_file);
 
-        let contents = std::fs::read_to_string(input_file)?;
-
-        let reg = Handlebars::new();
-
-        let rendered_contents = reg.render_template(
-            contents.as_str(),
-            &json!({"environment": &self.environment}),
-        )?;
-
-        let deploy_config: DeployConfig = serde_json::from_str(rendered_contents.as_str())?;
+        let deploy_config: DeployConfig = DeployConfig::new(input_file, environment)?;
 
         let mut environment_map: HashMap<String, String> = HashMap::new();
 
