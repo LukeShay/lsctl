@@ -17,6 +17,24 @@ jobs:
       - run: cargo install cargo-make
       - run: cargo make test-ci --verbose
 
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
+      - uses: actions/checkout@v2
+      - uses: actions-rs/cargo@v1
+      - uses: Swatinem/rust-cache@v1
+      - run: cargo fmt --check --verbose
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
+      - uses: actions/checkout@v2
+      - uses: actions-rs/cargo@v1
+      - uses: Swatinem/rust-cache@v1
+      - run: cargo clippy --all-targets --all-features --verbose
+
   build:
     runs-on: ${{ matrix.os }}
     strategy:
