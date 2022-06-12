@@ -72,6 +72,7 @@ jobs:
     steps:
       - uses: styfle/cancel-workflow-action@0.9.1
       - uses: actions/checkout@v1
+      - uses: Swatinem/rust-cache@v1
       - uses: actions/download-artifact@v2
         with:
           name: result

@@ -1,6 +1,6 @@
 {
     "name": "lsctl",
-    "version": "0.0.2-RC.14",
+    "version": "0.0.2-RC.15",
     "description": "CLI to help simplify my workflows",
     "homepage": "https://github.com/lukeshay/lsctl#readme",
     "bugs": {
@@ -16,13 +16,15 @@
     "files": [
         "jest-preset.js",
         "tsconfig",
-        "postinstall.mjs"
+        "postinstall.mjs",
+        "schema.json"
     ],
     "scripts": {
         "check": "npm run eslint && npm run prettier && npm run test",
         "eslint": "eslint --ignore-path .gitignore './**/*.{ts,js,cjs,json}'",
         "eslint:fix": "npm run eslint -- --fix",
         "postinstall": "node ./postinstall.mjs",
+        "prepare": "cargo run -- fly config schema",
         "prettier": "prettier --ignore-unknown --no-error-on-unmatched-pattern --check .",
         "prettier:fix": "npm run prettier -- --write",
         "test": "jest ."

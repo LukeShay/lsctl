@@ -9,15 +9,15 @@ dependencies = ["clean"]
 
 [tasks.clippy]
 command = "cargo"
-args = ["clippy", "--all", "--all-targets", "--all-features", "--verbose"]
+args = ["clippy", "--all", "--all-targets", "--all-features"]
 
 [tasks.fmt]
 command = "cargo"
-args = ["fmt", "--verbose"]
+args = ["fmt"]
 
 [tasks.fmt-check]
 command = "cargo"
-args = ["fmt", "--check", "--verbose"]
+args = ["fmt", "--check"]
 
 [tasks.check]
 dependencies = [
@@ -37,7 +37,7 @@ script = "./scripts/tag.sh ${@}"
 
 [tasks.test-rs]
 command = "cargo"
-args = ["test", "--verbose"]
+args = ["test"]
 
 [tasks.test-js]
 script_runner = "@shell"
