@@ -13,13 +13,9 @@ use super::{FlyConfigGenOptions, FlyConfigSubcommand};
 
 #[derive(Clone, Parser, Debug)]
 pub struct FlyDeploy {
-    /// The name of the input JSON config file
-    #[clap(long, short, default_value = "fly.json")]
-    pub input_file: String,
-
-    /// The environment to generate the Fly config for
-    #[clap(long, short, default_value = "dev")]
-    pub environment: String,
+    /// The names of the input JSON config files
+    #[clap(default_value = "vec![\"fly.json\"]")]
+    pub input_files: Vec<String>,
 
     /// The image tag or ID to deploy
     #[clap(long)]
@@ -46,14 +42,13 @@ pub struct FlyDeploy {
 impl super::CommandRunner for FlyDeploy {
     async fn execute(&self) -> anyhow::Result<()> {
         let fly_config_gen = FlyConfigGenOptions {
-            environment: self.environment.clone(),
             output_file: "fly.toml".to_string(),
-            input_file: self.input_file.clone(),
+            input_files: self.input_files.clone(),
         };
 
         fly_config_gen.execute().await.unwrap();
 
-        let deploy_config = DeployConfig::new(&self.input_file, &self.environment)?;
+        let deploy_config = DeployConfig::new(&self.input_files)?;
 
         let fly_apps_stdout = command_utils::stdout_or_bail2(
             Command::new("fly").arg("apps").arg("list"),

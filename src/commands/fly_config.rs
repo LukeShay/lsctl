@@ -44,31 +44,6 @@ impl super::CommandRunner for FlyConfigNewOptions {
         println!("    {:12} {}", "organization".bold(), organization);
         println!("    {:12} {}", "database".bold(), database);
 
-        let mut environment_map: HashMap<String, Vec<EnvironmentVariable>> = HashMap::new();
-
-        environment_map.insert(
-            "all".to_string(),
-            vec![
-                EnvironmentVariable {
-                    key: "PLAINTEXT_VALUE".to_string(),
-                    value: EnvironmentVariableValue::Value("plaintext value".to_string()),
-                },
-                EnvironmentVariable {
-                    key: "FROM_GCP_KMS_VALUE".to_string(),
-                    value: EnvironmentVariableValue::FromGcpKms {
-                        value: "kms string".to_string(),
-                    },
-                },
-                EnvironmentVariable {
-                    key: "FROM_GCP_SSM_VALUE".to_string(),
-                    value: EnvironmentVariableValue::FromGcpSsm {
-                        name: "ssm name".to_string(),
-                        version: 1,
-                    },
-                },
-            ],
-        );
-
         let config = DeployConfig {
             name: name.to_string(),
             organization: organization.to_string(),
@@ -101,7 +76,25 @@ impl super::CommandRunner for FlyConfigNewOptions {
                     None
                 },
             }),
-            environment: Some(environment_map),
+            environment: Some(vec![
+                EnvironmentVariable {
+                    key: "PLAINTEXT_VALUE".to_string(),
+                    value: EnvironmentVariableValue::Value("plaintext value".to_string()),
+                },
+                EnvironmentVariable {
+                    key: "FROM_GCP_KMS_VALUE".to_string(),
+                    value: EnvironmentVariableValue::FromGcpKms {
+                        value: "kms string".to_string(),
+                    },
+                },
+                EnvironmentVariable {
+                    key: "FROM_GCP_SSM_VALUE".to_string(),
+                    value: EnvironmentVariableValue::FromGcpSsm {
+                        name: "ssm name".to_string(),
+                        version: 1,
+                    },
+                },
+            ]),
             // metrics: None,
             services: Some(vec![FlyService {
                 internal_port: 3000,
@@ -150,69 +143,59 @@ impl super::CommandRunner for FlyConfigNewOptions {
 
 #[derive(Clone, Parser, Debug)]
 pub struct FlyConfigGenOptions {
-    /// The name of the input JSON config file
-    #[clap(long, short, default_value = "fly.json")]
-    pub input_file: String,
+    /// The names of the input JSON config files
+    #[clap(default_value = "vec![\"fly.json\"]")]
+    pub input_files: Vec<String>,
 
     /// The name of the output Fly toml file
     #[clap(long, short, default_value = "fly.toml")]
     pub output_file: String,
-
-    /// The environment to generate the Fly config for
-    #[clap(long, short, default_value = "dev")]
-    pub environment: String,
 }
 
 #[async_trait]
 impl super::CommandRunner for FlyConfigGenOptions {
     async fn execute(&self) -> anyhow::Result<()> {
-        let input_file = &self.input_file;
+        let input_files = &self.input_files;
         let output_file = &self.output_file;
-        let environment = &self.environment;
 
         println!("Generating fly config:");
-        println!("    {} {}", "input file".bold(), input_file);
+        println!("    {} {}", "input files".bold(), input_files.join(", "));
         println!("    {} {}", "output file".bold(), output_file);
 
-        let deploy_config: DeployConfig = DeployConfig::new(input_file, environment)?;
+        let deploy_config: DeployConfig = DeployConfig::new(input_files)?;
 
         let mut environment_map: HashMap<String, String> = HashMap::new();
 
         match &deploy_config.environment {
             Some(env) => {
-                env.iter().for_each(|(k, v)| match k.as_str() {
-                    "all" => {
-                        let environment_all = insert_environment_variables(&deploy_config, v);
-                        environment_map.extend(environment_all);
-                    }
-                    other if other == environment.as_str() => {
-                        let environment_all = insert_environment_variables(&deploy_config, v);
-                        environment_map.extend(environment_all);
-                    }
-                    _ => {}
-                });
+                let environment_all = insert_environment_variables(&deploy_config, env);
+                environment_map.extend(environment_all);
             }
             None => {}
         }
 
+        let json_string = serde_json::to_string_pretty(&deploy_config)?;
+
         let fly_config = FlyConfig {
             app: deploy_config.name,
-            build: deploy_config.build,
-            deploy: deploy_config.deploy,
             kill_signal: deploy_config.kill_signal,
             kill_timeout: deploy_config.kill_timeout,
-            mounts: deploy_config.mounts,
+            build: deploy_config.build,
+            deploy: deploy_config.deploy,
             statics: deploy_config.statics,
             services: deploy_config.services,
+            mounts: deploy_config.mounts,
             env: Some(environment_map),
         };
 
         let toml_string = toml::to_string(&fly_config)?;
 
-        return match file_utils::create_and_write_file(output_file, toml_string) {
-            Ok(_) => anyhow::Ok(()),
-            Err(e) => anyhow::bail!("Error creating file: {}", e),
-        };
+        file_utils::create_and_write_file(output_file, toml_string)
+            .expect(&format!("Error creating file: {}", output_file));
+        file_utils::create_and_write_file("./merged.json", json_string)
+            .expect(&format!("Error creating file: {}", output_file));
+
+        anyhow::Ok(())
     }
 }
 

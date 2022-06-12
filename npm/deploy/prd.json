@@ -1,0 +1,61 @@
+{
+    "$schema": "../schema.json",
+    "name": "ff-test-app",
+    "organization": "personal",
+    "default_region": "ord",
+    "regions": ["lax", "iad"],
+    "backup_regions": ["dfw", "ewr", "mia", "sea", "sjc", "fra", "maa", "yyz", "scl", "syd"],
+    "gcp_kms": null,
+    "gcp_ssm": null,
+    "database": {
+        "postgres": {
+            "cluster_size": 2,
+            "vm_size": "shared-cpu-1x",
+            "volume_size": 1
+        }
+    },
+    "scaling": {
+        "memory": 1024,
+        "vm_size": "shared-cpu-1x",
+        "max_count": 15,
+        "min_count": 1,
+        "balance_method": "standard"
+    },
+    "kill_signal": null,
+    "kill_timeout": null,
+    "build": null,
+    "deploy": null,
+    "statics": null,
+    "services": [
+        {
+            "internal_port": 8080,
+            "processes": ["app"],
+            "concurrency": {
+                "hard_limit": 25,
+                "soft_limit": 20,
+                "type": "connections"
+            },
+            "ports": [
+                {
+                    "port": 80,
+                    "force_https": null,
+                    "handlers": ["http"]
+                },
+                {
+                    "port": 443,
+                    "force_https": null,
+                    "handlers": ["tls", "http"]
+                }
+            ],
+            "tcp_checks": null,
+            "http_checks": null
+        }
+    ],
+    "mounts": null,
+    "environment": [
+        {
+            "key": "PROD_PLAINTEXT_VALUE",
+            "value": "plaintext value"
+        }
+    ]
+}

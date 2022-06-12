@@ -1,6 +1,5 @@
 use anyhow;
-use handlebars::Handlebars;
-use serde_json::json;
+use serde_json::Value;
 use std::collections::HashMap;
 
 use schemars::JsonSchema;
@@ -31,21 +30,33 @@ pub struct DeployConfig {
     pub statics: Option<Vec<FlyStatic>>,
     pub services: Option<Vec<FlyService>>,
     pub mounts: Option<Vec<FlyMount>>,
-    pub environment: Option<HashMap<String, Vec<EnvironmentVariable>>>,
+    pub environment: Option<Vec<EnvironmentVariable>>,
 }
 
 impl DeployConfig {
-    pub fn new(file_path: &str, environment: &str) -> anyhow::Result<DeployConfig> {
-        let contents = std::fs::read_to_string(file_path)?;
+    pub fn new(file_paths: &Vec<String>) -> anyhow::Result<DeployConfig> {
+        let json_files = file_paths
+            .iter()
+            .map(|file_path| {
+                let contents = std::fs::read_to_string(file_path)
+                    .expect(&format!("Failed to read file {}", file_path));
 
-        let reg = Handlebars::new();
+                match serde_json::from_str(&contents) {
+                    Ok(deploy_config) => deploy_config,
+                    Err(e) => panic!("{}", e),
+                }
+            })
+            .collect::<Vec<Value>>();
 
-        let rendered_contents =
-            reg.render_template(contents.as_str(), &json!({ "environment": environment }))?;
+        let mut merged = json_files[0].clone();
 
-        match serde_json::from_str(rendered_contents.as_str()) {
+        for json_file in json_files.iter().skip(1) {
+            json_patch::merge(&mut merged, json_file);
+        }
+
+        match serde_json::from_value(merged) {
             Ok(deploy_config) => Ok(deploy_config),
-            Err(e) => anyhow::bail!(e),
+            Err(e) => panic!("{}", e),
         }
     }
 }

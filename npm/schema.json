@@ -50,14 +50,11 @@
     },
     "environment": {
       "type": [
-        "object",
+        "array",
         "null"
       ],
-      "additionalProperties": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/EnvironmentVariable"
-        }
+      "items": {
+        "$ref": "#/definitions/EnvironmentVariable"
       }
     },
     "gcp_kms": {

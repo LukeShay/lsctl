@@ -1,5 +1,5 @@
 {
-    "$schema": "./schema.json",
+    "$schema": "../schema.json",
     "name": "ff-test-app",
     "organization": "personal",
     "default_region": "ord",
@@ -15,10 +15,10 @@
         }
     },
     "scaling": {
-        "memory": 1024,
+        "memory": 256,
         "vm_size": "shared-cpu-1x",
-        "max_count": 15,
-        "min_count": 5,
+        "max_count": 5,
+        "min_count": 1,
         "balance_method": "standard"
     },
     "kill_signal": null,
@@ -52,12 +52,10 @@
         }
     ],
     "mounts": null,
-    "environment": {
-        "all": [
-            {
-                "key": "PLAINTEXT_VALUE",
-                "value": "plaintext value"
-            }
-        ]
-    }
+    "environment": [
+        {
+            "key": "PLAINTEXT_VALUE",
+            "value": "plaintext value"
+        }
+    ]
 }

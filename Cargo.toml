@@ -28,6 +28,7 @@ clap = { version = "3.1.18", features = ["cargo", "derive", "wrap_help"] }
 colored = "2.0.0"
 futures = "0.3.21"
 handlebars = "4.3.0"
+json-patch = "0.2.6"
 regex = "1.5.6"
 relative-path = "1.6.1"
 schemars = "0.8.8"
