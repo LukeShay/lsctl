@@ -1,7 +1,10 @@
 {
+    "$schema": "./schema.json",
     "name": "ff-test-app",
     "organization": "personal",
     "default_region": "ord",
+    "regions": ["lax", "iad"],
+    "backup_regions": ["dfw", "ewr", "mia", "sea", "sjc", "fra", "maa", "yyz", "scl", "syd"],
     "gcp_kms": null,
     "gcp_ssm": null,
     "database": {
@@ -10,6 +13,13 @@
             "vm_size": "shared-cpu-1x",
             "volume_size": 1
         }
+    },
+    "scaling": {
+        "memory": 1024,
+        "vm_size": "shared-cpu-1x",
+        "max_count": 15,
+        "min_count": 5,
+        "balance_method": "standard"
     },
     "kill_signal": null,
     "kill_timeout": null,
@@ -38,19 +48,7 @@
                 }
             ],
             "tcp_checks": null,
-            "http_checks": [
-                {
-                    "interval": 10000,
-                    "grace_period": "5s",
-                    "method": "get",
-                    "path": "/api/health",
-                    "protocol": "http",
-                    "timeout": 2000,
-                    "restart_limit": null,
-                    "tls_skip_verify": null,
-                    "headers": null
-                }
-            ]
+            "http_checks": null
         }
     ],
     "mounts": null,

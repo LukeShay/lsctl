@@ -11,6 +11,16 @@ pub struct DeployConfig {
     pub name: String,
     pub organization: String,
     pub default_region: String,
+
+    #[serde(default)]
+    pub regions: Vec<String>,
+
+    #[serde(default)]
+    pub backup_regions: Vec<String>,
+
+    #[serde(default)]
+    pub scaling: FlyScaling,
+
     pub gcp_kms: Option<FlyGcpKms>,
     pub gcp_ssm: Option<FlyGcpSsm>,
     pub database: Option<FlyDatabase>,
@@ -41,6 +51,80 @@ impl DeployConfig {
 }
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+pub struct FlyAutoscaling {
+    #[serde(default = "fly_scaling_count_default")]
+    pub min_count: u64,
+    #[serde(default = "fly_scaling_count_default")]
+    pub max_count: u64,
+    #[serde(default = "FlyAutoscalingBalanceMethod::default")]
+    pub balance_method: FlyAutoscalingBalanceMethod,
+}
+
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum FlyAutoscalingBalanceMethod {
+    Balanced,
+    Standard,
+    Static,
+}
+
+impl FlyAutoscalingBalanceMethod {
+    pub fn default() -> FlyAutoscalingBalanceMethod {
+        FlyAutoscalingBalanceMethod::Balanced
+    }
+
+    pub fn is_static(&self) -> bool {
+        match self {
+            FlyAutoscalingBalanceMethod::Static => true,
+            _ => false,
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            FlyAutoscalingBalanceMethod::Balanced => "balanced",
+            FlyAutoscalingBalanceMethod::Standard => "standard",
+            FlyAutoscalingBalanceMethod::Static => "static",
+        }
+        .to_string()
+    }
+}
+
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+pub struct FlyScaling {
+    #[serde(default = "fly_scaling_memory_default")]
+    pub memory: u64,
+    #[serde(default = "FlyVmSize::default")]
+    pub vm_size: FlyVmSize,
+    #[serde(default = "fly_scaling_count_default")]
+    pub min_count: u64,
+    #[serde(default = "fly_scaling_count_default")]
+    pub max_count: u64,
+    #[serde(default = "FlyAutoscalingBalanceMethod::default")]
+    pub balance_method: FlyAutoscalingBalanceMethod,
+}
+
+impl Default for FlyScaling {
+    fn default() -> Self {
+        FlyScaling {
+            min_count: fly_scaling_count_default(),
+            max_count: fly_scaling_count_default(),
+            memory: fly_scaling_memory_default(),
+            vm_size: FlyVmSize::default(),
+            balance_method: FlyAutoscalingBalanceMethod::default(),
+        }
+    }
+}
+
+fn fly_scaling_count_default() -> u64 {
+    1
+}
+
+fn fly_scaling_memory_default() -> u64 {
+    256
+}
+
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 pub struct EnvironmentVariable {
     pub key: String,
     #[serde(flatten)]
@@ -48,7 +132,7 @@ pub struct EnvironmentVariable {
 }
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-#[serde(rename_all(deserialize = "snake_case", serialize = "snake_case"))]
+#[serde(rename_all = "snake_case")]
 pub enum EnvironmentVariableValue {
     Value(String),
     FromGcpKms { value: String },
@@ -119,9 +203,55 @@ pub struct FlyDatabase {
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 pub struct FlyDatabasePostgres {
-    pub cluster_size: u32,
-    pub vm_size: String,
-    pub volume_size: u32,
+    #[serde(default = "fly_database_postgres_cluster_size_default")]
+    pub cluster_size: u64,
+    #[serde(default = "FlyVmSize::default")]
+    pub vm_size: FlyVmSize,
+    #[serde(default = "fly_database_postgres_volume_size_default")]
+    pub volume_size: u64,
+}
+
+fn fly_database_postgres_cluster_size_default() -> u64 {
+    1
+}
+
+fn fly_database_postgres_volume_size_default() -> u64 {
+    0
+}
+
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+pub enum FlyVmSize {
+    #[serde(rename = "shared-cpu-1x")]
+    SharedCpu1x,
+
+    #[serde(rename = "dedicated-cpu-1x")]
+    DedicatedCpu1x,
+
+    #[serde(rename = "dedicated-cpu-2x")]
+    DedicatedCpu2x,
+
+    #[serde(rename = "dedicated-cpu-4x")]
+    DedicatedCpu4x,
+
+    #[serde(rename = "dedicated-cpu-8x")]
+    DedicatedCpu8x,
+}
+
+impl FlyVmSize {
+    pub fn default() -> Self {
+        FlyVmSize::SharedCpu1x
+    }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            FlyVmSize::SharedCpu1x => "shared-cpu-1x",
+            FlyVmSize::DedicatedCpu1x => "dedicated-cpu-1x",
+            FlyVmSize::DedicatedCpu2x => "dedicated-cpu-2x",
+            FlyVmSize::DedicatedCpu4x => "dedicated-cpu-4x",
+            FlyVmSize::DedicatedCpu8x => "dedicated-cpu-8x",
+        }
+        .to_string()
+    }
 }
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
@@ -167,12 +297,12 @@ pub enum FlyServicePortHandler {
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 pub struct FlyServiceHttpCheck {
-    pub interval: Option<u64>,
+    pub interval: Option<String>,
     pub grace_period: Option<String>,
     pub method: Option<String>,
     pub path: Option<String>,
     pub protocol: Option<FlyServiceHttpCheckProtocol>,
-    pub timeout: Option<u64>,
+    pub timeout: Option<String>,
     pub restart_limit: Option<u64>,
     pub tls_skip_verify: Option<bool>,
     pub headers: Option<HashMap<String, String>>,

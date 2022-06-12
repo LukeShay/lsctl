@@ -1,10 +1,13 @@
-use std::process::Command;
+use std::{collections::HashSet, process::Command};
 
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 use regex::Regex;
 
-use crate::{models::fly_models::DeployConfig, utils::command_utils};
+use crate::{
+    models::fly_models::DeployConfig,
+    utils::{collection_utils, command_utils},
+};
 
 use super::{FlyConfigGenOptions, FlyConfigSubcommand};
 
@@ -133,7 +136,7 @@ impl super::CommandRunner for FlyDeploy {
                             .arg("--initial-cluster-size")
                             .arg("2")
                             .arg("--vm-size")
-                            .arg(postgres.vm_size.as_str()),
+                            .arg(postgres.vm_size.to_string()),
                         "Failed to create Fly app database",
                     )
                     .unwrap();
@@ -185,6 +188,92 @@ impl super::CommandRunner for FlyDeploy {
         command_utils::stream_stdout_or_bail(
             Command::new("fly").args(args),
             "Failed to deploy the app",
+        )
+        .unwrap();
+
+        if deploy_config.scaling.balance_method.is_static() {
+            println!(
+                "Updating app scaling to {}",
+                deploy_config.scaling.min_count
+            );
+
+            command_utils::stream_stdout_or_bail(
+                Command::new("fly")
+                    .arg("scale")
+                    .arg("count")
+                    .arg(deploy_config.scaling.min_count.to_string())
+                    .arg("--app")
+                    .arg(&deploy_config.name),
+                "Failed to set scaling on the app",
+            )
+            .unwrap();
+        } else {
+            println!(
+                "Updating app autoscaling to method: {}, min: {}, max: {}",
+                deploy_config.scaling.balance_method.to_string(),
+                deploy_config.scaling.min_count,
+                deploy_config.scaling.max_count,
+            );
+
+            command_utils::stream_stdout_or_bail(
+                Command::new("fly")
+                    .arg("autoscale")
+                    .arg(deploy_config.scaling.balance_method.to_string())
+                    .arg("--app")
+                    .arg(&deploy_config.name)
+                    .arg(&format!("min={}", deploy_config.scaling.min_count))
+                    .arg(&format!("max={}", deploy_config.scaling.max_count)),
+                "Failed to set autoscaling on the app",
+            )
+            .unwrap();
+        }
+
+        println!("Updating app memory to {}mb", deploy_config.scaling.memory);
+        command_utils::stream_stdout_or_bail(
+            Command::new("fly")
+                .arg("scale")
+                .arg("memory")
+                .arg(deploy_config.scaling.memory.to_string())
+                .arg("--app")
+                .arg(&deploy_config.name),
+            "Failed to set memory on the app",
+        )
+        .unwrap();
+
+        let mut regions: HashSet<String> = HashSet::from_iter(deploy_config.regions);
+        regions.insert(deploy_config.default_region);
+
+        println!(
+            "Updating app regions to {}",
+            collection_utils::join_hash_set_of_strings(&regions, ", ")
+        );
+
+        command_utils::stdout_or_bail2(
+            Command::new("fly")
+                .arg("regions")
+                .arg("set")
+                .args(regions)
+                .arg("--app")
+                .arg(&deploy_config.name),
+            "Failed to set regions on the app",
+        )
+        .unwrap();
+
+        let regions: HashSet<String> = HashSet::from_iter(deploy_config.backup_regions);
+
+        println!(
+            "Updating app backup regions {}",
+            collection_utils::join_hash_set_of_strings(&regions, ", ")
+        );
+
+        command_utils::stream_stdout_or_bail(
+            Command::new("fly")
+                .arg("regions")
+                .arg("backup")
+                .args(regions)
+                .arg("--app")
+                .arg(&deploy_config.name),
+            "Failed to set backup regions on the app",
         )
         .unwrap();
 

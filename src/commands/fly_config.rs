@@ -73,6 +73,15 @@ impl super::CommandRunner for FlyConfigNewOptions {
             name: name.to_string(),
             organization: organization.to_string(),
             default_region: "ord".to_string(),
+            regions: vec![],
+            backup_regions: vec![],
+            scaling: FlyScaling {
+                min_count: 0,
+                max_count: 10,
+                balance_method: FlyAutoscalingBalanceMethod::default(),
+                memory: 256,
+                vm_size: FlyVmSize::default(),
+            },
             build: None,
             deploy: None,
             kill_signal: None,
@@ -85,7 +94,7 @@ impl super::CommandRunner for FlyConfigNewOptions {
                 postgres: if *database {
                     Some(FlyDatabasePostgres {
                         cluster_size: 2,
-                        vm_size: "shared-cpu-1x - 256".to_string(),
+                        vm_size: FlyVmSize::default(),
                         volume_size: 1,
                     })
                 } else {
@@ -117,12 +126,12 @@ impl super::CommandRunner for FlyConfigNewOptions {
                     },
                 ],
                 http_checks: Some(vec![FlyServiceHttpCheck {
-                    interval: Some(10000),
-                    grace_period: Some("5s".to_string()),
-                    method: Some("get".to_string()),
-                    path: Some("/api/health".to_string()),
+                    interval: Some("10000".into()),
+                    grace_period: Some("5s".into()),
+                    method: Some("get".into()),
+                    path: Some("/api/health".into()),
                     protocol: Some(FlyServiceHttpCheckProtocol::Http),
-                    timeout: Some(2000),
+                    timeout: Some("2000".into()),
                     headers: None,
                     restart_limit: None,
                     tls_skip_verify: None,
