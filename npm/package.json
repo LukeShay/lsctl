@@ -24,10 +24,10 @@
         "eslint": "eslint --ignore-path .gitignore './**/*.{ts,js,cjs,json}'",
         "eslint:fix": "npm run eslint -- --fix",
         "postinstall": "node ./postinstall.mjs",
+        "prepare": "cargo run -- fly config schema",
         "prettier": "prettier --ignore-unknown --no-error-on-unmatched-pattern --check .",
         "prettier:fix": "npm run prettier -- --write",
-        "test": "jest .",
-        "prepare": "cargo run -- fly config schema"
+        "test": "jest ."
     },
     "devDependencies": {
         "@swc/cli": "^0.1.57",

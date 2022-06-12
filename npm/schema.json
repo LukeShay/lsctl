@@ -1,633 +1,480 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "DeployConfig",
-  "type": "object",
-  "required": [
-    "default_region",
-    "name",
-    "organization"
-  ],
-  "properties": {
-    "build": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/FlyBuild"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "database": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/FlyDatabase"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "default_region": {
-      "type": "string"
-    },
-    "deploy": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/FlyDeploy"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "environment": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "additionalProperties": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/EnvironmentVariable"
-        }
-      }
-    },
-    "gcp_kms": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/FlyGcpKms"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "gcp_ssm": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/FlyGcpSsm"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "kill_signal": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/FlyKillSignal"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "kill_timeout": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "format": "uint64",
-      "minimum": 0.0
-    },
-    "mounts": {
-      "type": [
-        "array",
-        "null"
-      ],
-      "items": {
-        "$ref": "#/definitions/FlyMount"
-      }
-    },
-    "name": {
-      "type": "string"
-    },
-    "organization": {
-      "type": "string"
-    },
-    "services": {
-      "type": [
-        "array",
-        "null"
-      ],
-      "items": {
-        "$ref": "#/definitions/FlyService"
-      }
-    },
-    "statics": {
-      "type": [
-        "array",
-        "null"
-      ],
-      "items": {
-        "$ref": "#/definitions/FlyStatic"
-      }
-    }
-  },
-  "definitions": {
-    "EnvironmentVariable": {
-      "type": "object",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "value"
-          ],
-          "properties": {
-            "value": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "from_gcp_kms"
-          ],
-          "properties": {
-            "from_gcp_kms": {
-              "type": "object",
-              "required": [
-                "value"
-              ],
-              "properties": {
-                "value": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "from_gcp_ssm"
-          ],
-          "properties": {
-            "from_gcp_ssm": {
-              "type": "object",
-              "required": [
-                "name",
-                "version"
-              ],
-              "properties": {
-                "name": {
-                  "type": "string"
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "DeployConfig",
+    "type": "object",
+    "required": ["default_region", "name", "organization"],
+    "properties": {
+        "build": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/FlyBuild"
                 },
-                "version": {
-                  "type": "integer",
-                  "format": "uint16",
-                  "minimum": 0.0
+                {
+                    "type": "null"
                 }
-              }
-            }
-          },
-          "additionalProperties": false
-        }
-      ],
-      "required": [
-        "key"
-      ],
-      "properties": {
-        "key": {
-          "type": "string"
-        }
-      }
-    },
-    "FlyBuild": {
-      "type": "object",
-      "properties": {
-        "args": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
+            ]
+        },
+        "database": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/FlyDatabase"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "default_region": {
             "type": "string"
-          }
         },
-        "build_target": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "deploy": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/FlyDeploy"
+                },
+                {
+                    "type": "null"
+                }
+            ]
         },
-        "builder": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "environment": {
+            "type": ["object", "null"],
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/definitions/EnvironmentVariable"
+                }
+            }
         },
-        "buildpacks": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
+        "gcp_kms": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/FlyGcpKms"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "gcp_ssm": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/FlyGcpSsm"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "kill_signal": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/FlyKillSignal"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "kill_timeout": {
+            "type": ["integer", "null"],
+            "format": "uint64",
+            "minimum": 0.0
+        },
+        "mounts": {
+            "type": ["array", "null"],
+            "items": {
+                "$ref": "#/definitions/FlyMount"
+            }
+        },
+        "name": {
             "type": "string"
-          }
         },
-        "dockerfile": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "image": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "FlyDatabase": {
-      "type": "object",
-      "properties": {
-        "postgres": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/FlyDatabasePostgres"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "FlyDatabasePostgres": {
-      "type": "object",
-      "required": [
-        "cluster_size",
-        "vm_size",
-        "volume_size"
-      ],
-      "properties": {
-        "cluster_size": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "vm_size": {
-          "type": "string"
-        },
-        "volume_size": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0.0
-        }
-      }
-    },
-    "FlyDeploy": {
-      "type": "object",
-      "properties": {
-        "release_command": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "strategy": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/FlyDeployStrategy"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "FlyDeployStrategy": {
-      "type": "string",
-      "enum": [
-        "canary",
-        "rolling",
-        "bluegreen",
-        "immediate"
-      ]
-    },
-    "FlyGcpKms": {
-      "type": "object",
-      "required": [
-        "key",
-        "key_ring",
-        "location",
-        "project"
-      ],
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "key_ring": {
-          "type": "string"
-        },
-        "location": {
-          "type": "string"
-        },
-        "project": {
-          "type": "string"
-        }
-      }
-    },
-    "FlyGcpSsm": {
-      "type": "object",
-      "required": [
-        "project"
-      ],
-      "properties": {
-        "project": {
-          "type": "string"
-        }
-      }
-    },
-    "FlyKillSignal": {
-      "type": "string",
-      "enum": [
-        "sigInt",
-        "sigTerm",
-        "sigQuit",
-        "sigUsr1",
-        "sigUsr2",
-        "sigKill",
-        "sigStop"
-      ]
-    },
-    "FlyMount": {
-      "type": "object",
-      "required": [
-        "destination",
-        "source"
-      ],
-      "properties": {
-        "destination": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string"
-        }
-      }
-    },
-    "FlyService": {
-      "type": "object",
-      "required": [
-        "concurrency",
-        "internal_port",
-        "ports",
-        "processes"
-      ],
-      "properties": {
-        "concurrency": {
-          "$ref": "#/definitions/FlyServiceConcurrency"
-        },
-        "http_checks": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/FlyServiceHttpCheck"
-          }
-        },
-        "internal_port": {
-          "type": "integer",
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "ports": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FlyServicePort"
-          }
-        },
-        "processes": {
-          "type": "array",
-          "items": {
+        "organization": {
             "type": "string"
-          }
         },
-        "protocol": {
-          "writeOnly": true,
-          "anyOf": [
-            {
-              "$ref": "#/definitions/FlyServiceProtocol"
-            },
-            {
-              "type": "null"
+        "services": {
+            "type": ["array", "null"],
+            "items": {
+                "$ref": "#/definitions/FlyService"
             }
-          ]
         },
-        "tcp_checks": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/FlyServiceTcpCheck"
-          }
-        }
-      }
-    },
-    "FlyServiceConcurrency": {
-      "type": "object",
-      "required": [
-        "type"
-      ],
-      "properties": {
-        "hard_limit": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "soft_limit": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "type": {
-          "type": "string"
-        }
-      }
-    },
-    "FlyServiceHttpCheck": {
-      "type": "object",
-      "properties": {
-        "grace_period": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "headers": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "interval": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "method": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "path": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "protocol": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/FlyServiceHttpCheckProtocol"
-            },
-            {
-              "type": "null"
+        "statics": {
+            "type": ["array", "null"],
+            "items": {
+                "$ref": "#/definitions/FlyStatic"
             }
-          ]
-        },
-        "restart_limit": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "timeout": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "tls_skip_verify": {
-          "type": [
-            "boolean",
-            "null"
-          ]
         }
-      }
     },
-    "FlyServiceHttpCheckProtocol": {
-      "type": "string",
-      "enum": [
-        "http",
-        "https"
-      ]
-    },
-    "FlyServicePort": {
-      "type": "object",
-      "required": [
-        "handlers",
-        "port"
-      ],
-      "properties": {
-        "force_https": {
-          "type": [
-            "boolean",
-            "null"
-          ]
+    "definitions": {
+        "EnvironmentVariable": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "type": "object",
+                    "required": ["value"],
+                    "properties": {
+                        "value": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "required": ["from_gcp_kms"],
+                    "properties": {
+                        "from_gcp_kms": {
+                            "type": "object",
+                            "required": ["value"],
+                            "properties": {
+                                "value": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "required": ["from_gcp_ssm"],
+                    "properties": {
+                        "from_gcp_ssm": {
+                            "type": "object",
+                            "required": ["name", "version"],
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "version": {
+                                    "type": "integer",
+                                    "format": "uint16",
+                                    "minimum": 0.0
+                                }
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            ],
+            "required": ["key"],
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            }
         },
-        "handlers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FlyServicePortHandler"
-          }
+        "FlyBuild": {
+            "type": "object",
+            "properties": {
+                "args": {
+                    "type": ["object", "null"],
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "build_target": {
+                    "type": ["string", "null"]
+                },
+                "builder": {
+                    "type": ["string", "null"]
+                },
+                "buildpacks": {
+                    "type": ["array", "null"],
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "dockerfile": {
+                    "type": ["string", "null"]
+                },
+                "image": {
+                    "type": ["string", "null"]
+                }
+            }
         },
-        "port": {
-          "type": "integer",
-          "format": "uint64",
-          "minimum": 0.0
+        "FlyDatabase": {
+            "type": "object",
+            "properties": {
+                "postgres": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/FlyDatabasePostgres"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            }
+        },
+        "FlyDatabasePostgres": {
+            "type": "object",
+            "required": ["cluster_size", "vm_size", "volume_size"],
+            "properties": {
+                "cluster_size": {
+                    "type": "integer",
+                    "format": "uint32",
+                    "minimum": 0.0
+                },
+                "vm_size": {
+                    "type": "string"
+                },
+                "volume_size": {
+                    "type": "integer",
+                    "format": "uint32",
+                    "minimum": 0.0
+                }
+            }
+        },
+        "FlyDeploy": {
+            "type": "object",
+            "properties": {
+                "release_command": {
+                    "type": ["string", "null"]
+                },
+                "strategy": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/FlyDeployStrategy"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            }
+        },
+        "FlyDeployStrategy": {
+            "type": "string",
+            "enum": ["canary", "rolling", "bluegreen", "immediate"]
+        },
+        "FlyGcpKms": {
+            "type": "object",
+            "required": ["key", "key_ring", "location", "project"],
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "key_ring": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "project": {
+                    "type": "string"
+                }
+            }
+        },
+        "FlyGcpSsm": {
+            "type": "object",
+            "required": ["project"],
+            "properties": {
+                "project": {
+                    "type": "string"
+                }
+            }
+        },
+        "FlyKillSignal": {
+            "type": "string",
+            "enum": ["sigInt", "sigTerm", "sigQuit", "sigUsr1", "sigUsr2", "sigKill", "sigStop"]
+        },
+        "FlyMount": {
+            "type": "object",
+            "required": ["destination", "source"],
+            "properties": {
+                "destination": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "FlyService": {
+            "type": "object",
+            "required": ["concurrency", "internal_port", "ports", "processes"],
+            "properties": {
+                "concurrency": {
+                    "$ref": "#/definitions/FlyServiceConcurrency"
+                },
+                "http_checks": {
+                    "type": ["array", "null"],
+                    "items": {
+                        "$ref": "#/definitions/FlyServiceHttpCheck"
+                    }
+                },
+                "internal_port": {
+                    "type": "integer",
+                    "format": "uint64",
+                    "minimum": 0.0
+                },
+                "ports": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/FlyServicePort"
+                    }
+                },
+                "processes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "protocol": {
+                    "writeOnly": true,
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/FlyServiceProtocol"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "tcp_checks": {
+                    "type": ["array", "null"],
+                    "items": {
+                        "$ref": "#/definitions/FlyServiceTcpCheck"
+                    }
+                }
+            }
+        },
+        "FlyServiceConcurrency": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+                "hard_limit": {
+                    "type": ["integer", "null"],
+                    "format": "uint64",
+                    "minimum": 0.0
+                },
+                "soft_limit": {
+                    "type": ["integer", "null"],
+                    "format": "uint64",
+                    "minimum": 0.0
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "FlyServiceHttpCheck": {
+            "type": "object",
+            "properties": {
+                "grace_period": {
+                    "type": ["string", "null"]
+                },
+                "headers": {
+                    "type": ["object", "null"],
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "interval": {
+                    "type": ["integer", "null"],
+                    "format": "uint64",
+                    "minimum": 0.0
+                },
+                "method": {
+                    "type": ["string", "null"]
+                },
+                "path": {
+                    "type": ["string", "null"]
+                },
+                "protocol": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/FlyServiceHttpCheckProtocol"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "restart_limit": {
+                    "type": ["integer", "null"],
+                    "format": "uint64",
+                    "minimum": 0.0
+                },
+                "timeout": {
+                    "type": ["integer", "null"],
+                    "format": "uint64",
+                    "minimum": 0.0
+                },
+                "tls_skip_verify": {
+                    "type": ["boolean", "null"]
+                }
+            }
+        },
+        "FlyServiceHttpCheckProtocol": {
+            "type": "string",
+            "enum": ["http", "https"]
+        },
+        "FlyServicePort": {
+            "type": "object",
+            "required": ["handlers", "port"],
+            "properties": {
+                "force_https": {
+                    "type": ["boolean", "null"]
+                },
+                "handlers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/FlyServicePortHandler"
+                    }
+                },
+                "port": {
+                    "type": "integer",
+                    "format": "uint64",
+                    "minimum": 0.0
+                }
+            }
+        },
+        "FlyServicePortHandler": {
+            "type": "string",
+            "enum": ["http", "tls"]
+        },
+        "FlyServiceProtocol": {
+            "type": "string",
+            "enum": ["tcp", "udp"]
+        },
+        "FlyServiceTcpCheck": {
+            "type": "object",
+            "properties": {
+                "grace_period": {
+                    "type": ["string", "null"]
+                },
+                "interval": {
+                    "type": ["integer", "null"],
+                    "format": "uint64",
+                    "minimum": 0.0
+                },
+                "restart_limit": {
+                    "type": ["integer", "null"],
+                    "format": "uint64",
+                    "minimum": 0.0
+                },
+                "timeout": {
+                    "type": ["integer", "null"],
+                    "format": "uint64",
+                    "minimum": 0.0
+                }
+            }
+        },
+        "FlyStatic": {
+            "type": "object",
+            "required": ["guest_path", "url_prefix"],
+            "properties": {
+                "guest_path": {
+                    "type": "string"
+                },
+                "url_prefix": {
+                    "type": "string"
+                }
+            }
         }
-      }
-    },
-    "FlyServicePortHandler": {
-      "type": "string",
-      "enum": [
-        "http",
-        "tls"
-      ]
-    },
-    "FlyServiceProtocol": {
-      "type": "string",
-      "enum": [
-        "tcp",
-        "udp"
-      ]
-    },
-    "FlyServiceTcpCheck": {
-      "type": "object",
-      "properties": {
-        "grace_period": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "interval": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "restart_limit": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "timeout": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        }
-      }
-    },
-    "FlyStatic": {
-      "type": "object",
-      "required": [
-        "guest_path",
-        "url_prefix"
-      ],
-      "properties": {
-        "guest_path": {
-          "type": "string"
-        },
-        "url_prefix": {
-          "type": "string"
-        }
-      }
     }
-  }
 }
