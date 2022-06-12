@@ -14,10 +14,6 @@ pub struct FlyDeploy {
     #[clap(long, short, default_value = "fly.json")]
     pub input_file: String,
 
-    /// The name of the output Fly toml file
-    #[clap(long, short, default_value = "fly.toml")]
-    pub output_file: String,
-
     /// The environment to generate the Fly config for
     #[clap(long, short, default_value = "dev")]
     pub environment: String,
@@ -48,13 +44,13 @@ impl super::CommandRunner for FlyDeploy {
     async fn execute(&self) -> anyhow::Result<()> {
         let fly_config_gen = FlyConfigGenOptions {
             environment: self.environment.clone(),
-            output_file: self.output_file.clone(),
+            output_file: "fly.toml".to_string(),
             input_file: self.input_file.clone(),
         };
 
         fly_config_gen.execute().await.unwrap();
 
-        let deploy_config = DeployConfig::new(&self.input_file, &self.output_file)?;
+        let deploy_config = DeployConfig::new(&self.input_file, &self.environment)?;
 
         let fly_apps_stdout = command_utils::stdout_or_bail2(
             Command::new("fly").arg("apps").arg("list"),

@@ -11,6 +11,8 @@ const run = async () => {
 
     console.log(stdout);
     console.log(stderr);
+
+    await execAsync('lsctl fly config schema');
 };
 
 void run();
