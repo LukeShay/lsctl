@@ -11,6 +11,8 @@ use crate::{
 
 use super::{FlyConfigGenOptions, FlyConfigSubcommand};
 
+static FLYCTL: &str = "flyctl";
+
 #[derive(Clone, Parser, Debug)]
 pub struct FlyDeploy {
     /// The names of the input JSON config files
@@ -51,7 +53,7 @@ impl super::CommandRunner for FlyDeploy {
         let deploy_config = DeployConfig::new(&self.input_files)?;
 
         let fly_apps_stdout = command_utils::stdout_or_bail2(
-            Command::new("fly").arg("apps").arg("list"),
+            Command::new(FLYCTL).arg("apps").arg("list"),
             "Failed to get Fly apps",
         )
         .unwrap();
@@ -62,7 +64,7 @@ impl super::CommandRunner for FlyDeploy {
 
         let fly_app_secrets = if !should_launch {
             command_utils::stdout_or_bail2(
-                Command::new("fly")
+                Command::new(FLYCTL)
                     .arg("secrets")
                     .arg("list")
                     .arg("--app")
@@ -89,7 +91,7 @@ impl super::CommandRunner for FlyDeploy {
             println!("Launching new app");
 
             command_utils::stream_stdout_or_bail(
-                Command::new("fly")
+                Command::new(FLYCTL)
                     .arg("launch")
                     .arg("--no-deploy")
                     .arg("--copy-config")
@@ -117,7 +119,7 @@ impl super::CommandRunner for FlyDeploy {
                     println!("Creating new Postgres database");
 
                     command_utils::stream_stdout_or_bail(
-                        Command::new("fly")
+                        Command::new(FLYCTL)
                             .arg("postgres")
                             .arg("create")
                             .arg("--name")
@@ -141,7 +143,7 @@ impl super::CommandRunner for FlyDeploy {
                     println!("Attaching the Postgres database");
 
                     command_utils::stream_stdout_or_bail(
-                        Command::new("fly")
+                        Command::new(FLYCTL)
                             .arg("postgres")
                             .arg("attach")
                             .arg("--postgres-app")
@@ -181,7 +183,7 @@ impl super::CommandRunner for FlyDeploy {
         println!("Deploying the app");
 
         command_utils::stream_stdout_or_bail(
-            Command::new("fly").args(args),
+            Command::new(FLYCTL).args(args),
             "Failed to deploy the app",
         )
         .unwrap();
@@ -193,7 +195,7 @@ impl super::CommandRunner for FlyDeploy {
             );
 
             command_utils::stream_stdout_or_bail(
-                Command::new("fly")
+                Command::new(FLYCTL)
                     .arg("scale")
                     .arg("count")
                     .arg(deploy_config.scaling.min_count.to_string())
@@ -211,7 +213,7 @@ impl super::CommandRunner for FlyDeploy {
             );
 
             command_utils::stream_stdout_or_bail(
-                Command::new("fly")
+                Command::new(FLYCTL)
                     .arg("autoscale")
                     .arg(deploy_config.scaling.balance_method.to_string())
                     .arg("--app")
@@ -225,7 +227,7 @@ impl super::CommandRunner for FlyDeploy {
 
         println!("Updating app memory to {}mb", deploy_config.scaling.memory);
         command_utils::stream_stdout_or_bail(
-            Command::new("fly")
+            Command::new(FLYCTL)
                 .arg("scale")
                 .arg("memory")
                 .arg(deploy_config.scaling.memory.to_string())
@@ -244,7 +246,7 @@ impl super::CommandRunner for FlyDeploy {
         );
 
         command_utils::stdout_or_bail2(
-            Command::new("fly")
+            Command::new(FLYCTL)
                 .arg("regions")
                 .arg("set")
                 .args(regions)
@@ -262,7 +264,7 @@ impl super::CommandRunner for FlyDeploy {
         );
 
         command_utils::stream_stdout_or_bail(
-            Command::new("fly")
+            Command::new(FLYCTL)
                 .arg("regions")
                 .arg("backup")
                 .args(regions)
