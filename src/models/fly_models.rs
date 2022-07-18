@@ -20,6 +20,8 @@ pub struct DeployConfig {
     #[serde(default)]
     pub scaling: FlyScaling,
 
+    pub hooks: Option<FlyHooks>,
+
     pub gcp_kms: Option<FlyGcpKms>,
     pub gcp_ssm: Option<FlyGcpSsm>,
     pub database: Option<FlyDatabase>,
@@ -59,6 +61,12 @@ impl DeployConfig {
             Err(e) => panic!("{}", e),
         }
     }
+}
+
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+pub struct FlyHooks {
+    pub pre_deploy: Option<String>,
+    pub post_deploy: Option<String>,
 }
 
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]

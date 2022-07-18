@@ -52,6 +52,8 @@ impl super::CommandRunner for FlyDeploy {
 
         let deploy_config = DeployConfig::new(&self.input_files)?;
 
+        let deploy_config_hooks =  deploy_config.hooks;
+
         let fly_apps_stdout = command_utils::stdout_or_bail2(
             Command::new(FLYCTL).arg("apps").arg("list"),
             "Failed to get Fly apps",
@@ -154,6 +156,21 @@ impl super::CommandRunner for FlyDeploy {
                     )
                     .unwrap();
                 }
+            }
+        }
+
+        if let Some(hooks) = deploy_config_hooks.clone() {
+            if let Some(pre_deploy) = hooks.pre_deploy {
+                println!("Running pre-deploy hook");
+
+                let pre_deploy_vec = pre_deploy.split(" ").collect::<Vec<_>>();
+                let (program, args) = pre_deploy_vec.split_at(1);
+
+                command_utils::stream_stdout_or_bail(
+                    Command::new(program[0]).args(args),
+                    "Failed to run post-deploy hook",
+                )
+                .unwrap();
             }
         }
 
@@ -273,6 +290,21 @@ impl super::CommandRunner for FlyDeploy {
             "Failed to set backup regions on the app",
         )
         .unwrap();
+
+        if let Some(hooks) = deploy_config_hooks.clone() {
+            if let Some(post_deploy) = hooks.post_deploy {
+                println!("Running post-deploy hook");
+
+                let post_deploy_vec = post_deploy.split(" ").collect::<Vec<_>>();
+                let (program, args) = post_deploy_vec.split_at(1);
+
+                command_utils::stream_stdout_or_bail(
+                    Command::new(program[0]).args(args),
+                    "Failed to run post-deploy hook",
+                )
+                .unwrap();
+            }
+        }
 
         anyhow::Ok(())
     }

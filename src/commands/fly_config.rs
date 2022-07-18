@@ -57,6 +57,10 @@ impl super::CommandRunner for FlyConfigNewOptions {
                 memory: 256,
                 vm_size: FlyVmSize::default(),
             },
+            hooks: Some(FlyHooks {
+                pre_deploy: None,
+                post_deploy: None,
+            }),
             build: None,
             deploy: None,
             kill_signal: None,
