@@ -52,7 +52,7 @@ impl super::CommandRunner for FlyDeploy {
 
         let deploy_config = DeployConfig::new(&self.input_files)?;
 
-        let deploy_config_hooks =  deploy_config.hooks;
+        let deploy_config_hooks = deploy_config.hooks;
 
         let fly_apps_stdout = command_utils::stdout_or_bail2(
             Command::new(FLYCTL).arg("apps").arg("list"),
